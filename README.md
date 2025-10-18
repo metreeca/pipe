@@ -15,8 +15,8 @@ npm install @metreeca/pipe
 ```
 
 > [!WARNING]
-> TypeScript consumers must use `"moduleResolution": "bundler"` (or `"node16"`/`"nodenext"`) in `tsconfig.json`. The
-> legacy `"node"` resolver is not supported.
+> TypeScript consumers must use `"moduleResolution": "bundler"` (or `"node16"`/`"nodenext"`) in `tsconfig.json`.
+> The > legacy `"node"` resolver is not supported.
 
 # Usage
 
@@ -25,7 +25,7 @@ npm install @metreeca/pipe
 **@metreeca/pipe** provides four main abstractions:
 
 - **Pipes**: Fluent interface for composing operations on async iterables
-- **Feeds**: Functions that create pipes from various sources (values, arrays, ranges, merged/chained streams)
+- **Feeds**: Functions that create pipes from various sources
 - **Tasks**: Intermediate transformations that can be chained
 - **Sinks**: Terminal operations that consume iterables and produce results
 
@@ -36,16 +36,23 @@ npm install @metreeca/pipe
 ```typescript
 import { range, items, merge } from '@metreeca/pipe';
 
-range(10, 0);                              // 10, 9, 8, ..., 1
+range(10, 0);               // 10, 9, 8, ..., 1
 
-items(42);                                 // from single values
-items([1, 2, 3, 4, 5]);                    // from arrays
-items(new Set([1, 2, 3]));                 // from iterables
-items(asyncGenerator());                   // from async iterables
-items(pipe);                               // from pipes
+items(42);                  // from single values
+items([1, 2, 3, 4, 5]);     // from arrays
+items(new Set([1, 2, 3]));  // from iterables
+items(asyncGenerator());    // from async iterables
+items(pipe);                // from pipes
 
-chain(items([1, 2, 3]), items([4, 5, 6])); // sequential consumption
-merge(items([1, 2, 3]), items([4, 5, 6])); // concurrent consumption
+chain(                      // sequential consumption
+	items([1, 2, 3]),
+	items([4, 5, 6])
+);
+
+merge(                      // concurrent consumption
+	items([1, 2, 3]),
+	items([4, 5, 6])
+);
 ```
 
 ## Transforming Data
