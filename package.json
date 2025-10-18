@@ -1,0 +1,52 @@
+{
+  "name": "@metreeca/pipe",
+  "version": "0.9.0",
+  "description": "A lightweight TypeScript library for composable async iterable processing.\n",
+  "keywords": [
+    "typescript",
+    "utilities"
+  ],
+  "homepage": "https://metreeca.github.io/pipe/",
+  "bugs": {
+    "url": "https://github.com/metreeca/pipe/issues",
+    "email": "info@metreeca.com"
+  },
+  "license": "Apache-2.0",
+  "author": {
+    "name": "Metreeca",
+    "email": "info@metreeca.com",
+    "url": "https://www.metreeca.com/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/metreeca/pipe.git"
+  },
+  "type": "module",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "files": [
+    "README.md",
+    "LICENSE",
+    "dist"
+  ],
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "clean": "rm -rf dist docs node_modules",
+    "setup": "npm install && npm audit fix",
+    "build": "rm -rf dist docs && tsc && typedoc",
+    "check": "npx vitest run",
+    "watch": "npx typedoc && (npx typedoc --watch & npx five-server docs --open)"
+  },
+  "dependencies": {
+    "@metreeca/core": "^0.9.0"
+  },
+  "devDependencies": {
+    "five-server": "^0.4.4",
+    "typedoc": "^0.28.14",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  }
+}
