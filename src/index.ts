@@ -350,6 +350,8 @@ export function merge<V>(...sources: readonly Pipe<V>[]): Pipe<V> {
 /**
  * Creates a task skipping the first n items from the stream.
  *
+ * Items are processed sequentially and output order is preserved.
+ *
  * @group Tasks
  *
  * @typeParam V The type of items in the stream
@@ -376,6 +378,8 @@ export function skip<V>(n: number): Task<V> {
 /**
  * Creates a task taking only the first n items from the stream.
  *
+ * Items are processed sequentially and output order is preserved.
+ *
  * @group Tasks
  *
  * @typeParam V The type of items in the stream
@@ -401,6 +405,7 @@ export function take<V>(n: number): Task<V> {
 /**
  * Creates a task executing a side effect for each item without modifying the stream.
  *
+ * Items are processed sequentially and output order is preserved.
  * Useful for debugging or monitoring items as they flow through the pipeline.
  *
  * @group Tasks
@@ -423,6 +428,8 @@ export function peek<V>(consumer: (item: V) => void | Promise<void>): Task<V> {
 /**
  * Creates a task filtering stream items based on a predicate.
  *
+ * Items are processed sequentially and output order is preserved.
+ *
  * @group Tasks
  *
  * @typeParam V The type of items in the stream
@@ -443,6 +450,9 @@ export function filter<V>(predicate: (item: V) => boolean | Promise<boolean>): T
 
 /**
  * Creates a task filtering out duplicate items.
+ *
+ * Items are processed sequentially and output order is preserved.
+ * Only the first occurrence of each unique item is yielded.
  *
  * @group Tasks
  *
@@ -478,6 +488,8 @@ export function distinct<V, K>(selector?: (item: V) => K | Promise<K>): Task<V> 
 /**
  * Creates a task transforming each item using a mapper function.
  *
+ * Items are processed sequentially and output order is preserved.
+ *
  * @group Tasks
  *
  * @typeParam V The type of input items
@@ -497,6 +509,8 @@ export function map<V, R>(mapper: (item: V) => R | Promise<R>): Task<V, R> {
 
 /**
  * Creates a task transforming and flattening stream items.
+ *
+ * Items are processed sequentially and output order is preserved.
  *
  * @group Tasks
  *
@@ -539,6 +553,8 @@ export function flatMap<V, R>(mapper: (item: V) => Data<R> | Promise<Data<R>>): 
 
 /**
  * Creates a task grouping items into batches of a specified size.
+ *
+ * Items are processed sequentially and order is preserved both across batches and within each batch.
  *
  * If size is 0 or negative, collects all items into a single batch.
  * The final batch may contain fewer items than the specified size.
