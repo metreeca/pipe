@@ -8,12 +8,12 @@ A lightweight TypeScript library for composable async iterable processing.
 pipes, tasks, and sinks. The composable design enables building complex data processing pipelines with full type
 safety and minimal boilerplate. Key features include:
 
-- **Focused API** with a small set of operators covering common async iterable use cases
-- **Natural syntax** for readable pipeline composition: `pipe(items(data)(filter())(map())(toArray()))`
-- **Minimal boilerplate** through automatic `undefined` filtering and seamless type inference across pipeline stages
-- **Task/Sink pattern** providing clear separation between transformations and terminal operations
-- **Parallel processing** via built-in `{ parallel: true }` option for concurrent execution
-- **Extensible design** for creating custom feeds, tasks, and sinks
+- **Focused API** › Small set of operators covering common async iterable use cases
+- **Natural syntax** › Readable pipeline composition: `pipe(items(data)(filter())(map())(toArray()))`
+- **Minimal boilerplate** › Automatic `undefined` filtering and seamless type inference across pipeline stages
+- **Task/Sink pattern** › Clear separation between transformations and terminal operations
+- **Parallel processing** › Built-in `{ parallel: true }` option for concurrent execution
+- **Extensible design** › Easy creation of custom feeds, tasks, and sinks
 
 # Installation
 
