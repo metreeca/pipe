@@ -132,6 +132,40 @@ for await (const value of iterable) {
 }
 ```
 
+## Creating Custom Tasks
+
+Tasks are functions that transform async iterables. Create custom tasks by returning an async generator function.
+
+```typescript
+import { items, toArray, type Task } from '@metreeca/pipe';
+
+function double<V extends number>(): Task<V, V> {
+	return async function* (source) {
+		for await (const item of source) { yield item*2 as V; }
+	};
+}
+
+await items([1, 2, 3])(double())(toArray());  // [2, 4, 6]
+```
+
+## Creating Custom Feeds
+
+Feeds are functions that create new pipes. **Always wrap async iterables with `items()`** to ensure `undefined`
+filtering and proper pipe interface integration. Directly returning raw async iterables bypasses the automatic
+`undefined` filtering mechanism.
+
+```typescript
+import { items, toArray, type Pipe } from '@metreeca/pipe';
+
+function repeat<V>(value: V, count: number): Pipe<V> {
+	return items(async function* () {
+		for (let i = 0; i < count; i++) { yield value; }
+	}());
+}
+
+await repeat(42, 3)(toArray());  // [42, 42, 42]
+```
+
 # Support
 
 - open an [issue](https://github.com/metreeca/pipe/issues) to report a problem or to suggest a new feature

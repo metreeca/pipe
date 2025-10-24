@@ -198,6 +198,109 @@ describe("Feeds", () => {
 
 		});
 
+		describe("should filter undefined values", () => {
+
+			it("should filter undefined from array feed", async () => {
+
+				const result = await items([1, undefined, 2, undefined, 3])(toArray());
+
+				expect(result).toEqual([1, 2, 3]);
+
+			});
+
+			it("should filter undefined from single value feed", async () => {
+
+				const result = await items(undefined)(toArray());
+
+				expect(result).toEqual([]);
+
+			});
+
+			it("should filter undefined from function feed", async () => {
+
+				const result = await items(() => [10, undefined, 20, undefined])(toArray());
+
+				expect(result).toEqual([10, 20]);
+
+			});
+
+			it("should filter undefined from iterable feed", async () => {
+
+				const iterable = {
+					* [Symbol.iterator]() {
+						yield "a";
+						yield undefined;
+						yield "b";
+						yield undefined;
+						yield "c";
+					}
+				};
+
+				const result = await items(iterable)(toArray());
+
+				expect(result).toEqual(["a", "b", "c"]);
+
+			});
+
+			it("should filter undefined from async iterable feed", async () => {
+
+				async function* gen() {
+					yield "x";
+					yield undefined;
+					yield "y";
+					yield undefined;
+					yield "z";
+				}
+
+				const result = await items(gen())(toArray());
+
+				expect(result).toEqual(["x", "y", "z"]);
+
+			});
+
+			it("should handle all undefined values", async () => {
+
+				const result = await items([undefined, undefined, undefined])(toArray());
+
+				expect(result).toEqual([]);
+
+			});
+
+			it("should preserve falsy values that are not undefined", async () => {
+
+				const result = await items([0, false, "", null, undefined])(toArray());
+
+				expect(result).toEqual([0, false, "", null]);
+
+			});
+
+			it("should filter undefined through chained operations", async () => {
+
+				const result = await items([1, undefined, 2, undefined, 3] as number[])
+				(map(x => x*2))
+				(toArray());
+
+				expect(result).toEqual([2, 4, 6]);
+
+			});
+
+			it("should filter undefined from custom task output", async () => {
+
+				const parseNumbers = async function* (source: AsyncIterable<string>) {
+					for await (const item of source) {
+						const num = parseInt(item);
+						yield isNaN(num) ? undefined : num;
+					}
+				};
+
+				const result = await items(["1", "abc", "2", "xyz", "3"])(parseNumbers)(toArray());
+
+				expect(result).toEqual([1, 2, 3]);
+
+			});
+
+		});
+
 	});
 
 	describe("merge()", () => {

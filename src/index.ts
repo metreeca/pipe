@@ -19,6 +19,24 @@
  *
  * Provides a composable API for working with async iterables through pipes, tasks, and sinks.
  *
+ * @remarks
+ *
+ * **All streams automatically filter out `undefined` values.** This filtering occurs at stream creation
+ * and when tasks are chained together, ensuring that `undefined` never flows through your pipeline.
+ *
+ * - `undefined` values are **removed** from all streams
+ * - Other falsy values (`null`, `0`, `false`, `""`) are **preserved**
+ * - Custom tasks yielding `undefined` have those values automatically filtered
+ * - This behavior is centralized in the {@link items} function, which is used internally for all stream creation
+ *
+ * @example
+ *
+ * ```typescript
+ * await items([1, undefined, 2])(toArray())                // [1, 2]
+ * await items([0, false, "", null, undefined])(toArray()) // [0, false, "", null]
+ * await items(["1", "bad", "2"])(parseNumbers)(toArray()) // [1, 2] - undefined from task filtered
+ * ```
+ *
  * @groupDescription Pipes
  * Core utilities for processing pipes.
  *
@@ -165,40 +183,11 @@ export function pipe(source: unknown): unknown {
 //// Feeds /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * Creates a pipe that yields a sequence of numbers within a range.
- *
- * Generates numbers in ascending order if `start` < `end`, or descending order if `start` > `end`.
- *
- * @group Feeds
- *
- * @param start The starting value (inclusive)
- * @param end The ending value (exclusive)
- *
- * @returns A pipe yielding numbers from start to end
- */
-export function range(start: number, end: number): Pipe<number> {
-
-	async function* generator() {
-		if ( start < end ) {
-
-			for (let i=start; i < end; i++) {
-				yield i;
-			}
-
-		} else {
-
-			for (let i=start; i > end; i--) {
-				yield i;
-			}
-
-		}
-	}
-
-	return items(generator());
-}
-
-/**
  * Creates a pipe from an item feed.
+ *
+ * This is the central point where `undefined` filtering occurs (see module documentation).
+ * All `undefined` values are automatically removed from the stream, while other falsy values
+ * (`null`, `0`, `false`, `""`) are preserved.
  *
  * @group Feeds
  *
@@ -207,31 +196,60 @@ export function range(start: number, end: number): Pipe<number> {
  * @param feed The source to create a pipe from
  *
  * @returns A pipe for fluent composition
+ *
+ * @remarks
+ *
+ * **When creating custom feeds**, always wrap async iterables with `items()` to ensure
+ * `undefined` filtering and proper pipe interface integration. Directly returning raw
+ * async iterables bypasses the filtering mechanism.
+ *
+ * @example
+ * ```typescript
+ * function customFeed(): Pipe<number> {
+ *   return items(async function*() {
+ *     yield 1;
+ *     yield undefined; // Will be filtered out
+ *     yield 2;
+ *   }());
+ * }
+ * ```
  */
 export function items<V>(feed: Data<V>): Pipe<V> {
 
 	const generator=isFunction(feed) ?
 
 		async function* () {
-			yield* feed();
+			for await (const item of feed()) {
+				if ( item !== undefined ) {
+					yield item;
+				}
+			}
 		}
 
 		: isAsyncIterable<V>(feed) ?
 
 			async function* () {
-				yield* feed;
+				for await (const item of feed) {
+					if ( item !== undefined ) {
+						yield item;
+					}
+				}
 			}
 
 			: isIterable<V>(feed) ?
 
 				async function* () {
 					for (const item of feed) {
-						yield item;
+						if ( item !== undefined ) {
+							yield item;
+						}
 					}
 				}
 
 				: async function* () {
-					yield feed;
+					if ( feed !== undefined ) {
+						yield feed;
+					}
 				};
 
 	function pipe(): AsyncIterable<V>;
@@ -255,6 +273,40 @@ export function items<V>(feed: Data<V>): Pipe<V> {
 	return pipe;
 
 }
+
+/**
+ * Creates a pipe that yields a sequence of numbers within a range.
+ *
+ * Generates numbers in ascending order if `start` < `end`, or descending order if `start` > `end`.
+ *
+ * @group Feeds
+ *
+ * @param start The starting value (inclusive)
+ * @param end The ending value (exclusive)
+ *
+ * @returns A pipe yielding numbers from start to end
+ */
+export function range(start: number, end: number): Pipe<number> {
+
+	async function* generator() {
+		if ( start < end ) {
+
+			for (let i = start; i < end; i++) {
+				yield i;
+			}
+
+		} else {
+
+			for (let i = start; i > end; i--) {
+				yield i;
+			}
+
+		}
+	}
+
+	return items(generator());
+}
+
 
 /**
  * Chains multiple pipes into a single stream, preserving source order.
