@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:typedoc.org)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "Bash(gh --version)",
+      "Read(//Users/Alessandro/Metreeca/Packages/**)",
+      "Bash(npm run check)",
+      "WebFetch(domain:www.npmjs.com)",
+      "WebFetch(domain:vitest.dev)",
+      "WebFetch(domain:npmjs.com)",
+      "WebFetch(domain:registry.npmjs.org)",
+      "WebFetch(domain:www.typedoc.org)",
+      "WebFetch(domain:api.github.com)",
+      "Bash(npm run build:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
