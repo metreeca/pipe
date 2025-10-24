@@ -18,24 +18,51 @@
  * Asynchronous stream processing utilities.
  *
  * Provides a composable API for working with async iterables through pipes, tasks, and sinks.
+ **
+ * > [!WARNING]
+ * > **All streams automatically filter out `undefined` values.** This filtering occurs at stream creation
+ * > and when tasks are chained together, ensuring that `undefined` never flows through your pipeline.
+ * >
+ * > - `undefined` values are **removed** from all streams
+ * > - Other falsy values (`null`, `0`, `false`, `""`) are **preserved**
+ * > - Custom tasks yielding `undefined` have those values automatically filtered
+ * > - This behavior is centralized in the {@link items} function, which is used internally for all stream creation
+ *
  *
  * @remarks
  *
- * **All streams automatically filter out `undefined` values.** This filtering occurs at stream creation
- * and when tasks are chained together, ensuring that `undefined` never flows through your pipeline.
+ * The library is designed to be extensible. You can create custom tasks and feeds to suit your specific needs.
  *
- * - `undefined` values are **removed** from all streams
- * - Other falsy values (`null`, `0`, `false`, `""`) are **preserved**
- * - Custom tasks yielding `undefined` have those values automatically filtered
- * - This behavior is centralized in the {@link items} function, which is used internally for all stream creation
- *
- * @example
+ * **Custom Tasks** transform async iterables by returning async generator functions:
  *
  * ```typescript
- * await items([1, undefined, 2])(toArray())                // [1, 2]
- * await items([0, false, "", null, undefined])(toArray()) // [0, false, "", null]
- * await items(["1", "bad", "2"])(parseNumbers)(toArray()) // [1, 2] - undefined from task filtered
+ * function double<V extends number>(): Task<V, V> {
+ *   return async function* (source) {
+ *     for await (const item of source) { yield item * 2 as V; }
+ *   };
+ * }
+ *
+ * await items([1, 2, 3])(double())(toArray());  // [2, 4, 6]
  * ```
+ *
+ * **Custom Feeds** create new pipes:
+ *
+ * ```typescript
+ * function repeat<V>(value: V, count: number): Pipe<V> {
+ *   return items(async function* () {
+ *     for (let i = 0; i < count; i++) { yield value; }
+ *   }());
+ * }
+ *
+ * await repeat(42, 3)(toArray());  // [42, 42, 42]
+ * ```
+ *
+ * > [!CAUTION]
+ * > When creating custom feeds, always wrap the returned async iterable with {@link items} to ensure `undefined`
+ * > filtering and proper pipe interface integration.
+ * >
+ * > Directly returning raw async iterables (async generators, async generator
+ * > functions, or objects implementing `AsyncIterable<T>`) bypasses the automatic `undefined` filtering mechanism.
  *
  * @groupDescription Pipes
  * Core utilities for processing pipes.
@@ -52,7 +79,22 @@
  * @module
  */
 
-import { isAsyncIterable, isFunction, isIterable, isPromise } from "@metreeca/core";
+import { isAsyncIterable, isFunction, isIterable, isNumber, isPromise } from "@metreeca/core";
+import { cpus } from "os";
+
+
+/**
+ * Number of CPU cores available for parallelize processing.
+ *
+ * Defaults to 4 if CPU detection fails (cpus() returns empty array).
+ *
+ * This conservative default maintains meaningful parallelism while avoiding
+ * severe over-subscription on systems where CPU count cannot be determined.
+ */
+const cores = cpus().length || 4;
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * Flexible data source for stream processing.
@@ -68,11 +110,13 @@ import { isAsyncIterable, isFunction, isIterable, isPromise } from "@metreeca/co
  * @typeParam V The type of values in the data source
  *
  * @remarks
+ *
  * Enables functions to accept data in the most convenient format for the caller,
  * internally normalizing it to async iterables for uniform processing.
  * Used by {@link items} to create pipes and by {@link flatMap} to flatten nested data sources.
  *
  * @example
+ *
  * ```typescript
  * // All of these are valid Data<number> values:
  * const scalarData: Data<number> = 42;
@@ -82,7 +126,7 @@ import { isAsyncIterable, isFunction, isIterable, isPromise } from "@metreeca/co
  * const pipeData: Data<number> = items([1, 2, 3]);
  * ```
  */
-export type Data<V>=V | readonly V[] | Iterable<V> | AsyncIterable<V> | Pipe<V>
+export type Data<V> = V | readonly V[] | Iterable<V> | AsyncIterable<V> | Pipe<V>
 
 /**
  * Fluent interface for composing async stream operations.
@@ -129,7 +173,7 @@ export interface Pipe<V> {
  * @typeParam V The type of input values
  * @typeParam R The type of output values (defaults to V)
  */
-export interface Task<V, R=V> {
+export interface Task<V, R = V> {
 
 	(value: AsyncIterable<V>): AsyncIterable<R>;
 
@@ -144,7 +188,7 @@ export interface Task<V, R=V> {
  * @typeParam V The type of input values
  * @typeParam R The type of result (defaults to V)
  */
-export interface Sink<V, R=V> {
+export interface Sink<V, R = V> {
 
 	(value: AsyncIterable<V>): Promise<R>;
 
@@ -170,8 +214,10 @@ export function pipe<V>(source: Promise<V>): Promise<V>;
  * @group Pipes
  *
  * @param source The pipe to process
+ *
+ * @returns The underlying async iterable
  */
-export function pipe<T>(source: Pipe<T>): AsyncIterable<T>;
+export function pipe<V>(source: Pipe<V>): AsyncIterable<V>;
 
 export function pipe(source: unknown): unknown {
 
@@ -216,41 +262,13 @@ export function pipe(source: unknown): unknown {
  */
 export function items<V>(feed: Data<V>): Pipe<V> {
 
-	const generator=isFunction(feed) ?
-
-		async function* () {
-			for await (const item of feed()) {
-				if ( item !== undefined ) {
-					yield item;
-				}
+	const generator = async function* () {
+		for await (const item of flatten(feed)) {
+			if ( item !== undefined ) {
+				yield item;
 			}
 		}
-
-		: isAsyncIterable<V>(feed) ?
-
-			async function* () {
-				for await (const item of feed) {
-					if ( item !== undefined ) {
-						yield item;
-					}
-				}
-			}
-
-			: isIterable<V>(feed) ?
-
-				async function* () {
-					for (const item of feed) {
-						if ( item !== undefined ) {
-							yield item;
-						}
-					}
-				}
-
-				: async function* () {
-					if ( feed !== undefined ) {
-						yield feed;
-					}
-				};
+	};
 
 	function pipe(): AsyncIterable<V>;
 	function pipe<R>(task: Task<V, R>): Pipe<R>;
@@ -259,7 +277,7 @@ export function items<V>(feed: Data<V>): Pipe<V> {
 
 		if ( step ) {
 
-			const result=step(generator());
+			const result = step(generator());
 
 			return isPromise(result) ? result : items(result);
 
@@ -317,7 +335,7 @@ export function range(start: number, end: number): Pipe<number> {
  *
  * @group Feeds
  *
- * @typeParam T The type of items in the streams
+ * @typeParam V The type of items in the streams
  *
  * @param sources The pipes to chain
  *
@@ -325,7 +343,7 @@ export function range(start: number, end: number): Pipe<number> {
  */
 export function chain<V>(...sources: readonly Pipe<V>[]): Pipe<V> {
 
-	const generator=async function* () {
+	const generator = async function* () {
 
 		for (const source of sources) {
 			yield* source();
@@ -344,7 +362,7 @@ export function chain<V>(...sources: readonly Pipe<V>[]): Pipe<V> {
  *
  * @group Feeds
  *
- * @typeParam T The type of items in the streams
+ * @typeParam V The type of items in the streams
  *
  * @param sources The pipes to merge
  *
@@ -352,11 +370,11 @@ export function chain<V>(...sources: readonly Pipe<V>[]): Pipe<V> {
  */
 export function merge<V>(...sources: readonly Pipe<V>[]): Pipe<V> {
 
-	const generator=async function* () {
+	const generator = async function* () {
 
-		const iterators=sources.map(source => source()[Symbol.asyncIterator]());
+		const iterators = sources.map(source => source()[Symbol.asyncIterator]());
 
-		const pending=new Map(
+		const pending = new Map(
 			iterators.map(iterator => {
 				return [iterator, iterator.next().then(result => ({ iterator, result }))] as const;
 			})
@@ -366,7 +384,7 @@ export function merge<V>(...sources: readonly Pipe<V>[]): Pipe<V> {
 
 			while ( pending.size > 0 ) {
 
-				const { iterator, result }=await Promise.race(pending.values());
+				const { iterator, result } = await Promise.race(pending.values());
 
 				if ( result.done ) {
 
@@ -415,7 +433,7 @@ export function merge<V>(...sources: readonly Pipe<V>[]): Pipe<V> {
 export function skip<V>(n: number): Task<V> {
 	return async function* (source: AsyncIterable<V>) {
 
-		let count=0;
+		let count = 0;
 
 		for await (const item of source) {
 			if ( count >= n ) {
@@ -443,7 +461,7 @@ export function skip<V>(n: number): Task<V> {
 export function take<V>(n: number): Task<V> {
 	return async function* (source: AsyncIterable<V>) {
 
-		let count=0;
+		let count = 0;
 
 		for await (const item of source) {
 			if ( count < n ) {
@@ -516,17 +534,18 @@ export function filter<V>(predicate: (item: V) => boolean | Promise<boolean>): T
  * @returns A task that filters out duplicate items
  *
  * @remarks
+ *
  * Maintains a `Set` of all seen items in memory. For large or infinite streams
  * with many unique items, this may cause memory issues.
  */
 export function distinct<V, K>(selector?: (item: V) => K | Promise<K>): Task<V> {
 	return async function* (source: AsyncIterable<V>) {
 
-		const seen=new Set();
+		const seen = new Set();
 
 		for await (const item of source) {
 
-			const key=selector ? await selector(item) : item;
+			const key = selector ? await selector(item) : item;
 
 			if ( !seen.has(key) ) {
 				seen.add(key);
@@ -538,69 +557,115 @@ export function distinct<V, K>(selector?: (item: V) => K | Promise<K>): Task<V> 
 }
 
 /**
- * Creates a task transforming each item using a mapper function.
+ * Creates a task that maps each input item to an output value using a mapper function.
  *
- * Items are processed sequentially and output order is preserved.
+ * Items are processed sequentially by default, preserving output order. In parallel mode,
+ * items are processed concurrently and emitted as they complete without preserving order.
  *
  * @group Tasks
  *
- * @typeParam V The type of input items
- * @typeParam R The type of output items
+ * @typeParam V The type of input values
+ * @typeParam R The type of mapped result values
  *
- * @param mapper The function to transform each item
+ * @param mapper The function to transform each item (can be sync or async)
+ * @param parallel Concurrency control: `false`/`undefined`/number ≤ 1 for sequential (default),
+ *   `true` for parallel with auto-detected concurrency, or a number > 1 for explicit concurrency limit
  *
- * @returns A task that transforms items using the mapper
+ * @returns A task that transforms items using the mapper function
+ *
+ * @remarks
+ *
+ * In parallel mode, when an error occurs all pending operations are awaited
+ * (but not failed) before the error is thrown to prevent resource leaks.
+ *
+ * @example
+ *
+ * ```typescript
+ * map((n: number) => n * 2)                                             // sequential
+ * map(async (id: string) => fetch(`/users/${id}`), { parallel: true })  // parallel
+ * map(heavyOperation, { parallel: 4 })                                  // parallel with limit
+ * ```
  */
-export function map<V, R>(mapper: (item: V) => R | Promise<R>): Task<V, R> {
-	return async function* (source: AsyncIterable<V>) {
-		for await (const item of source) {
-			yield await mapper(item);
-		}
-	};
+export function map<V, R>(
+	mapper: (item: V) => R | Promise<R>,
+	{ parallel }: { parallel?: boolean | number } = {}
+): Task<V, R> {
+
+	if ( parallel === true || isNumber(parallel) && parallel > 1 ) {
+
+		return source => parallelize(
+			source,
+			item => Promise.resolve(mapper(item)),
+			isNumber(parallel) ? parallel : cores,
+			async function* (result) { yield result; }
+		);
+
+	} else {
+
+		return async function* (source: AsyncIterable<V>) {
+			for await (const item of source) {
+				yield await mapper(item);
+			}
+		};
+
+	}
+
 }
 
 /**
- * Creates a task transforming and flattening stream items.
+ * Creates a task that transforms each item into a data source and flattens the results.
  *
- * Items are processed sequentially and output order is preserved.
+ * Items are processed sequentially by default, preserving output order. In parallel mode,
+ * items are processed concurrently and flattened results are emitted as they complete without preserving order.
  *
  * @group Tasks
  *
  * @typeParam V The type of input items
- * @typeParam R The type of output items
+ * @typeParam R The type of output items after flattening
  *
- * @param mapper The function to transform each item into an item feed
+ * @param mapper The function to transform each item into a data source (can be sync or async)
+ * @param parallel Concurrency control: `false`/`undefined`/number ≤ 1 for sequential (default),
+ *   `true` for parallel with auto-detected concurrency, or a number > 1 for explicit concurrency limit
  *
  * @returns A task that transforms and flattens items
+ *
+ * @remarks
+ *
+ * In parallel mode, when an error occurs all pending operations are awaited
+ * (but not failed) before the error is thrown to prevent resource leaks.
+ *
+ * @example
+ *
+ * ```typescript
+ * flatMap((n: number) => [n, n * 2])                                     // sequential
+ * flatMap(async (id: string) => fetchUserPosts(id), { parallel: true })  // parallel
+ * flatMap(expandNode, { parallel: 4 })                                   // parallel with limit
+ * ```
  */
-export function flatMap<V, R>(mapper: (item: V) => Data<R> | Promise<Data<R>>): Task<V, R> {
-	return async function* (source: AsyncIterable<V>) {
-		for await (const item of source) {
+export function flatMap<V, R>(
+	mapper: (item: V) => Data<R> | Promise<Data<R>>,
+	{ parallel }: { parallel?: boolean | number } = {}
+): Task<V, R> {
 
-			const result=await mapper(item);
+	if ( parallel === true || isNumber(parallel) && parallel > 1 ) {
 
-			if ( isFunction(result) ) {
+		return source => parallelize(
+			source,
+			item => Promise.resolve(mapper(item)),
+			isNumber(parallel) ? parallel : cores,
+			flatten
+		);
 
-				yield* result();
+	} else {
 
-			} else if ( isAsyncIterable<R>(result) ) {
-
-				yield* result;
-
-			} else if ( isIterable<R>(result) ) {
-
-				for (const value of result) {
-					yield value;
-				}
-
-			} else {
-
-				yield result;
-
+		return async function* (source: AsyncIterable<V>) {
+			for await (const item of source) {
+				yield* flatten(await mapper(item));
 			}
+		};
 
-		}
-	};
+	}
+
 }
 
 /**
@@ -620,14 +685,15 @@ export function flatMap<V, R>(mapper: (item: V) => Data<R> | Promise<Data<R>>): 
  * @returns A task that groups items into batches
  *
  * @remarks
+ *
  * When size is 0 or negative, all stream items are accumulated in memory before
  * yielding a single batch. For large or infinite streams, this may cause
  * memory issues. Use a positive size for bounded memory consumption.
  */
-export function batch<V>(size: number=0): Task<V, readonly V[]> {
+export function batch<V>(size: number = 0): Task<V, readonly V[]> {
 	return async function* (source: AsyncIterable<V>) {
 
-		const batch: V[]=[];
+		const batch: V[] = [];
 
 		for await (const item of source) {
 
@@ -661,7 +727,7 @@ export function count<V>(): Sink<V, number> {
 
 		let count = 0;
 
-		for await (const item of source) {
+		for await (const _ of source) {
 			count++;
 		}
 
@@ -797,15 +863,15 @@ export function reduce<V, R>(reducer: (accumulator: R, item: V) => R | Promise<R
 export function reduce<V, R>(reducer: Function, initial?: R): Sink<V, undefined | V | R> {
 	return async source => {
 
-		let started=arguments.length > 1;
-		let accumulator: V | R | undefined=started ? initial : undefined;
+		let started = arguments.length > 1;
+		let accumulator: V | R | undefined = started ? initial : undefined;
 
 		for await (const item of source) {
 			if ( started ) {
-				accumulator= await reducer(accumulator, item);
+				accumulator = await reducer(accumulator, item);
 			} else {
-				accumulator=item;
-				started=true;
+				accumulator = item;
+				started = true;
 			}
 		}
 
@@ -826,7 +892,7 @@ export function reduce<V, R>(reducer: Function, initial?: R): Sink<V, undefined 
 export function toArray<V>(): Sink<V, readonly V[]> {
 	return async source => {
 
-		const array: V[]=[];
+		const array: V[] = [];
 
 		for await (const item of source) {
 			array.push(item);
@@ -848,7 +914,7 @@ export function toArray<V>(): Sink<V, readonly V[]> {
 export function toSet<V>(): Sink<V, ReadonlySet<V>> {
 	return async source => {
 
-		const set=new Set<V>();
+		const set = new Set<V>();
 
 		for await (const item of source) {
 			set.add(item);
@@ -899,7 +965,7 @@ export function toMap<V, K, R>(
 ): Sink<V, ReadonlyMap<K, V | R>> {
 	return async source => {
 
-		const map=new Map<K, V | R>();
+		const map = new Map<K, V | R>();
 
 		for await (const item of source) {
 
@@ -912,4 +978,101 @@ export function toMap<V, K, R>(
 
 		return map;
 	};
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Helper to flatten Data<R> into individual items.
+ */
+async function* flatten<R>(data: Data<R>): AsyncGenerator<R, void, unknown> {
+
+	if ( isFunction(data) ) {
+
+		yield* data();
+
+	} else if ( isAsyncIterable<R>(data) ) {
+
+		yield* data;
+
+	} else if ( isIterable<R>(data) ) {
+
+		yield* data;
+
+	} else {
+
+		yield data;
+
+	}
+
+}
+
+/**
+ * Helper for parallel processing with configurable result handling.
+ */
+async function* parallelize<V, R, T>(
+	source: AsyncIterable<V>,
+	mapper: (item: V) => Promise<R>,
+	threads: number,
+	handler: (result: R) => AsyncIterable<T>
+): AsyncGenerator<T, void, unknown> {
+
+	type Task<U> = { id: number; promise: Promise<U> };
+
+	const pending = new Map<number, Task<R>>();
+	const iterator = source[Symbol.asyncIterator]();
+
+	let nextId = 0;
+	let done = false;
+
+	try {
+
+		while ( pending.size > 0 || !done ) {
+
+			// Fill up to threads limit
+
+			while ( pending.size < threads && !done ) {
+
+				const next = await iterator.next();
+
+				if ( next.done ) {
+					done = true;
+				} else {
+					const id = nextId++;
+					const promise = mapper(next.value);
+					pending.set(id, { id, promise });
+				}
+			}
+
+			// Wait for next completion
+
+			if ( pending.size > 0 ) {
+
+				const completed = await Promise.race(
+					Array.from(pending.values()).map(({ id, promise }) =>
+						promise.then(result => ({ id, result }), error => ({ id, error }))
+					)
+				);
+
+				pending.delete(completed.id);
+
+				if ( "error" in completed ) {
+					await Promise.allSettled(Array.from(pending.values()).map(t => t.promise));
+					throw completed.error;
+				}
+
+				yield* handler(completed.result);
+			}
+		}
+
+	} finally {
+
+		try {
+			await iterator.return?.();
+		} catch {
+			// Suppress cleanup errors
+		}
+
+	}
 }
