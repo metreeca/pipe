@@ -596,6 +596,52 @@ export function batch<V>(size: number=0): Task<V, readonly V[]> {
 //// Sinks /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
+ * Creates a sink counting the total number of items in the stream.
+ *
+ * @group Sinks
+ *
+ * @typeParam V The type of items in the stream
+ *
+ * @returns A sink that counts all items in the stream
+ */
+export function count<V>(): Sink<V, number> {
+	return async source => {
+
+		let count = 0;
+
+		for await (const item of source) {
+			count++;
+		}
+
+		return count;
+
+	};
+}
+
+/**
+ * Creates a sink executing a side effect for each item and consuming the stream.
+ *
+ * Terminal operation that triggers stream execution.
+ *
+ * @group Sinks
+ *
+ * @typeParam V The type of items in the stream
+ *
+ * @param consumer The function to execute for each item
+ *
+ * @returns A sink that executes the consumer for each item
+ */
+export function forEach<V>(consumer: (item: V) => void | Promise<void>): Sink<V, void> {
+	return async source => {
+
+		for await (const item of source) {
+			await consumer(item);
+		}
+
+	};
+}
+
+/**
  * Creates a sink checking if any item satisfies the predicate.
  *
  * @group Sinks
@@ -813,28 +859,5 @@ export function toMap<V, K, R>(
 		}
 
 		return map;
-	};
-}
-
-/**
- * Creates a sink executing a side effect for each item and consuming the stream.
- *
- * Terminal operation that triggers stream execution.
- *
- * @group Sinks
- *
- * @typeParam V The type of items in the stream
- *
- * @param consumer The function to execute for each item
- *
- * @returns A sink that executes the consumer for each item
- */
-export function forEach<V>(consumer: (item: V) => void | Promise<void>): Sink<V, void> {
-	return async source => {
-
-		for await (const item of source) {
-			await consumer(item);
-		}
-
 	};
 }
