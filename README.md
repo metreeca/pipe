@@ -10,7 +10,7 @@ safety and minimal boilerplate. Key features include:
 
 - **Focused API** with a small set of operators covering common async iterable use cases
 - **Natural syntax** for readable pipeline composition: `pipe(items(data)(filter())(map())(toArray()))`
-- **Minimal boilerplate** through automatic `undefined` filtering and direct type inference
+- **Minimal boilerplate** through automatic `undefined` filtering and seamless type inference across pipeline stages
 - **Task/Sink pattern** providing clear separation between transformations and terminal operations
 - **Parallel processing** via built-in `{ parallel: true }` option for concurrent execution
 - **Extensible design** for creating custom feeds, tasks, and sinks
