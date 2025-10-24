@@ -23,7 +23,7 @@ npm install @metreeca/pipe
 
 > [!WARNING]
 > TypeScript consumers must use `"moduleResolution": "bundler"` (or `"node16"`/`"nodenext"`) in `tsconfig.json`.
-> The > legacy `"node"` resolver is not supported.
+> The legacy `"node"` resolver is not supported.
 
 # Usage
 
@@ -193,10 +193,11 @@ await repeat(42, 3)(toArray());  // [42, 42, 42]
 ```
 
 > [!CAUTION]
-> When creating custom feeds, always wrap the returned async iterable with `items()` to ensure `undefined` filtering
-> and proper pipe interface integration.
+> When creating custom feeds, always wrap the returned async iterable with
+> [`items()`](https://metreeca.github.io/pipe/functions/items.html) to ensure `undefined` filtering and proper pipe
+> interface integration.
 >
-> Directly returning raw async iterables (async generators, async generator > functions, or objects implementing
+> Directly returning raw async iterables (async generators, async generator functions, or objects implementing
 `AsyncIterable<T>`) bypasses the automatic `undefined` filtering mechanism.
 
 # Support
