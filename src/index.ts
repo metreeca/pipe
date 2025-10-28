@@ -338,6 +338,10 @@ export function range(start: number, end: number): Pipe<number> {
  * The generator is called on demand and returned data is flattened into the stream.
  * Iteration stops when the generator returns `undefined`, an empty array, or an empty iterator.
  *
+ * The generator can be either synchronous or asynchronous (returning a Promise).
+ * Async generators are useful for pagination APIs, database cursors, or any data source
+ * where fetching the next batch requires an async operation.
+ *
  * @group Feeds
  *
  * @typeParam V The type of items in the stream
@@ -346,11 +350,11 @@ export function range(start: number, end: number): Pipe<number> {
  *
  * @returns A pipe yielding items from successive generator calls
  */
-export function iterate<V>(generator: () => Data<V> | undefined): Pipe<V> {
+export function iterate<V>(generator: () => undefined | Data<V> | Promise<undefined | Data<V>>): Pipe<V> {
 
 	return items((async function* () {
 
-		for (let data = generator(); data !== undefined; data = generator()) {
+		for (let data = await generator(); data !== undefined; data = await generator()) {
 
 			const iterable = flatten(data);
 			const iterator = iterable[Symbol.asyncIterator]();

@@ -292,6 +292,114 @@ describe("Feeds", () => {
 
 		});
 
+		it("should handle async generators", async () => {
+
+			function asyncCounter() {
+				let count = 0;
+				return async () => {
+					await new Promise(resolve => setTimeout(resolve, 10));
+					return count >= 3 ? undefined : count++;
+				};
+			}
+
+			const values = await iterate(asyncCounter())(toArray());
+
+			expect(values).toEqual([0, 1, 2]);
+
+		});
+
+		it("should handle async generators with arrays", async () => {
+
+			function asyncPager() {
+				let page = 0;
+				return async () => {
+					await new Promise(resolve => setTimeout(resolve, 10));
+					if ( page >= 3 ) {
+						return undefined;
+					}
+					const start = page*2;
+					page++;
+					return [start, start+1];
+				};
+			}
+
+			const values = await iterate(asyncPager())(toArray());
+
+			expect(values).toEqual([0, 1, 2, 3, 4, 5]);
+
+		});
+
+		it("should handle async generators returning promises of pipes", async () => {
+
+			function asyncCounter() {
+				let count = 0;
+				return async () => {
+					await new Promise(resolve => setTimeout(resolve, 10));
+					return count >= 2 ? undefined : range(count++, count);
+				};
+			}
+
+			const values = await iterate(asyncCounter())(toArray());
+
+			expect(values).toEqual([0, 1]);
+
+		});
+
+		it("should handle async generators that terminate with undefined", async () => {
+
+			let callCount = 0;
+			const values = await iterate(async () => {
+				await new Promise(resolve => setTimeout(resolve, 10));
+				callCount++;
+				return undefined;
+			})(toArray());
+
+			expect(values).toEqual([]);
+			expect(callCount).toBe(1);
+
+		});
+
+		it("should handle async generators that terminate with empty array", async () => {
+
+			let callCount = 0;
+			const values = await iterate(async () => {
+				await new Promise(resolve => setTimeout(resolve, 10));
+				callCount++;
+				return [];
+			})(toArray());
+
+			expect(values).toEqual([]);
+			expect(callCount).toBe(1);
+
+		});
+
+		it("should handle mixed sync and async patterns", async () => {
+
+			function mixedGenerator() {
+				let count = 0;
+				return async () => {
+					if ( count === 0 ) {
+						count++;
+						return 0; // synchronous value
+					} else if ( count === 1 ) {
+						count++;
+						await new Promise(resolve => setTimeout(resolve, 10));
+						return 1; // async value
+					} else if ( count === 2 ) {
+						count++;
+						return [2, 3]; // synchronous array
+					} else {
+						return undefined;
+					}
+				};
+			}
+
+			const values = await iterate(mixedGenerator())(toArray());
+
+			expect(values).toEqual([0, 1, 2, 3]);
+
+		});
+
 		describe("should create a compliant pipe object", () => {
 
 			it("should return async iterable when called without transform", async () => {
