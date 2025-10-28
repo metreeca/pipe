@@ -20,7 +20,8 @@
       "Read(//Users/Alessandro/.claude/**)",
       "WebFetch(domain:github.blog)",
       "Skill(markdown-writer)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(npm view:*)"
     ],
     "deny": [],
     "ask": []

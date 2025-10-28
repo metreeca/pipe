@@ -58,11 +58,8 @@
  * ```
  *
  * > [!CAUTION]
- * > When creating custom feeds, always wrap the returned async iterable with {@link items} to ensure `undefined`
- * > filtering and proper pipe interface integration.
- * >
- * > Directly returning raw async iterables (async generators, async generator
- * > functions, or objects implementing `AsyncIterable<T>`) bypasses the automatic `undefined` filtering mechanism.
+ * > When creating custom feeds, always wrap async generators, async generator functions, or `AsyncIterable<T>` objects
+ * > with {@link items} to ensure `undefined` filtering and proper pipe interface integration.
  *
  * @groupDescription Pipes
  * Core utilities for processing pipes.

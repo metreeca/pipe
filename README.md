@@ -4,9 +4,9 @@
 
 A lightweight TypeScript library for composable async iterable processing.
 
-**@metreeca/pipe** provides an idiomatic, easy-to-use functional API for working with async iterables through
-pipes, tasks, and sinks. The composable design enables building complex data processing pipelines with full type
-safety and minimal boilerplate. Key features include:
+**@metreeca/pipe** provides an idiomatic, easy-to-use functional API for working with async iterables through pipes,
+tasks, and sinks. The composable design enables building complex data processing pipelines with full type safety and
+minimal boilerplate. Key features include:
 
 - **Focused API** › Small set of operators covering common async iterable use cases
 - **Natural syntax** › Readable pipeline composition: `pipe(items(data)(filter())(map())(toArray()))`
@@ -36,9 +36,9 @@ npm install @metreeca/pipe
 - **Tasks**: Transform items with map, filter, and other operations
 - **Sinks**: Collect results into arrays, reduce values, find items, etc.
 
-## Creating Pipes
+## Creating Feeds
 
-[Create pipes](https://metreeca.github.io/pipe/modules.html#Feeds) from various data sources.
+Create [feeds](https://metreeca.github.io/pipe/modules.html#Feeds) from various data sources.
 
 ```typescript
 import { range, items, chain, merge, iterate } from '@metreeca/pipe';
@@ -50,7 +50,7 @@ items(new Set([1, 2, 3]));  // from iterables
 items(asyncGenerator());    // from async iterables
 items(pipe);                // from pipes
 
-range(10, 0);               // 10, 9, 8, ..., 1
+range(10, 0);               // from numeric ranges
 
 iterate(() => {             // from repeated generator calls
 	let count = 0;
@@ -58,41 +58,41 @@ iterate(() => {             // from repeated generator calls
 });
 
 chain(                      // sequential consumption
-  items([1, 2, 3]),
-  items([4, 5, 6])
+	items([1, 2, 3]),
+	items([4, 5, 6])
 );
 
 merge(                      // concurrent consumption
-  items([1, 2, 3]),
-  items([4, 5, 6])
+	items([1, 2, 3]),
+	items([4, 5, 6])
 );
 ```
 
 ## Transforming Data
 
-[Chain tasks](https://metreeca.github.io/pipe/modules.html#Tasks) to transform, filter, and process items.
+Chain [tasks](https://metreeca.github.io/pipe/modules.html#Tasks) to transform, filter, and process items.
 
 ```typescript
 import { pipe, items, map, filter, take, distinct, batch, toArray } from '@metreeca/pipe';
 
 await pipe(
-  (items([1, 2, 3, 4, 5]))
-  (filter(x => x%2 === 0))
-  (map(x => x*2))
-  (take(2))
-  (toArray())
+	(items([1, 2, 3, 4, 5]))
+	(filter(x => x%2 === 0))
+	(map(x => x*2))
+	(take(2))
+	(toArray())
 );  // [4, 8]
 
 await pipe(
-  (items([1, 2, 2, 3, 1]))
-  (distinct())
-  (toArray())
+	(items([1, 2, 2, 3, 1]))
+	(distinct())
+	(toArray())
 );  // [1, 2, 3]
 
 await pipe(
-  (items([1, 2, 3, 4, 5]))
-  (batch(2))
-  (toArray())
+	(items([1, 2, 3, 4, 5]))
+	(batch(2))
+	(toArray())
 );  // [[1, 2], [3, 4], [5]]
 ```
 
@@ -105,9 +105,9 @@ import { flatMap, items, map, pipe, toArray } from "@metreeca/pipe";
 
 
 await pipe( // mapping with auto-detected concurrency (CPU cores)
-  (items([1, 2, 3]))
-  (map(async x => x*2, { parallel: true }))
-  (toArray())
+	(items([1, 2, 3]))
+	(map(async x => x*2, { parallel: true }))
+	(toArray())
 );
 
 await pipe( // mapping with unbounded concurrency (I/O-heavy tasks)
@@ -117,33 +117,33 @@ await pipe( // mapping with unbounded concurrency (I/O-heavy tasks)
 );
 
 await pipe( // flat-mapping with explicit limit
-  (items([1, 2, 3]))
-  (flatMap(async x => [x, x*2], { parallel: 2 }))
-  (toArray())
+	(items([1, 2, 3]))
+	(flatMap(async x => [x, x*2], { parallel: 2 }))
+	(toArray())
 );
 ```
 
 ## Consuming Data
 
-[Apply sinks](https://metreeca.github.io/pipe/modules.html#Sinks) as terminal operations that consume pipes and return
+Apply [sinks](https://metreeca.github.io/pipe/modules.html#Sinks) as terminal operations that consume pipes and return
 promises with final results.
 
 ```typescript
 import { pipe, items, some, every, find, reduce, toArray, toSet, toMap, forEach } from '@metreeca/pipe';
 
 await pipe(
-  (items([1, 2, 3]))
-  (some(x => x > 2))
+	(items([1, 2, 3]))
+	(some(x => x > 2))
 );  // Promise<true>
 
 await pipe(
-  (items([1, 2, 3, 4]))
-  (find(x => x > 2))
+	(items([1, 2, 3, 4]))
+	(find(x => x > 2))
 );  // Promise<3>
 
 await pipe(
-  (items([1, 2, 3, 4]))
-  (reduce((a, x) => a+x, 0))
+	(items([1, 2, 3, 4]))
+	(reduce((a, x) => a+x, 0))
 );  // Promise<10>
 
 await pipe(
@@ -205,12 +205,9 @@ await repeat(42, 3)(toArray());  // [42, 42, 42]
 ```
 
 > [!CAUTION]
-> When creating custom feeds, always wrap the returned async iterable with
-> [`items()`](https://metreeca.github.io/pipe/functions/items.html) to ensure `undefined` filtering and proper pipe
-> interface integration.
->
-> Directly returning raw async iterables (async generators, async generator functions, or objects implementing
-`AsyncIterable<T>`) bypasses the automatic `undefined` filtering mechanism.
+> When creating custom feeds, always wrap async generators, async generator functions, or `AsyncIterable<T>` objects
+> with [`items()`](https://metreeca.github.io/pipe/functions/items.html) to ensure `undefined` filtering and proper
+> pipe interface integration.
 
 # Support
 
