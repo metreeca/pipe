@@ -240,7 +240,11 @@ export function pipe(source: unknown): unknown {
  * - **Primitives** (strings, numbers, booleans, null): Treated as atomic values and yielded as single items
  * - **Arrays/Iterables** (excluding strings): Items are yielded individually
  * - **Async Iterables/Pipes**: Items are yielded as they become available
+ * - **Promises**: Awaited and then processed according to their resolved value
  * - **Other values** (objects, etc.): Yielded as single items
+ *
+ * The feed parameter can be synchronous or asynchronous (returning a Promise).
+ * Async feeds are useful for fetching data from APIs, databases, or any async source.
  *
  * @group Feeds
  *
@@ -250,7 +254,7 @@ export function pipe(source: unknown): unknown {
  *
  * @returns A pipe for fluent composition
  */
-export function items<V>(feed: Data<V>): Pipe<V>;
+export function items<V>(feed: Data<V> | Promise<Data<V>>): Pipe<V>;
 
 /**
  * Creates a pipe from multiple scalar values.
@@ -265,10 +269,10 @@ export function items<V>(feed: Data<V>): Pipe<V>;
  */
 export function items<V>(...values: readonly [V, V, ...V[]]): Pipe<V>;
 
-export function items<V>(feed: Data<V>, ...values: V[]): Pipe<V> {
+export function items<V>(feed: Data<V> | Promise<Data<V>>, ...values: V[]): Pipe<V> {
 
 	async function* generator() {
-		for await (const item of flatten(values.length > 0 ? [feed, ...values] as V[] : feed)) {
+		for await (const item of flatten(values.length > 0 ? [await feed, ...values] as V[] : await feed)) {
 			if ( item !== undefined ) {
 				yield item;
 			}
@@ -674,12 +678,23 @@ export function map<V, R>(
  * Items are processed sequentially by default, preserving output order. In parallel mode,
  * items are processed concurrently and flattened results are emitted as they complete without preserving order.
  *
+ * Data sources returned by the mapper are handled as follows:
+ *
+ * - **Primitives** (strings, numbers, booleans, null): Yielded as single atomic items
+ * - **Arrays/Iterables** (excluding strings): Items are yielded individually from each mapper result
+ * - **Async Iterables/Pipes**: Items are yielded as they become available
+ * - **Promises**: Awaited and then processed according to their resolved value
+ * - **Other values** (objects, etc.): Yielded as single items
+ *
+ * The mapper function can be synchronous or asynchronous (returning a Promise).
+ * Async mappers are useful for fetching data from APIs, databases, or any async source.
+ *
  * @group Tasks
  *
  * @typeParam V The type of input items
  * @typeParam R The type of output items after flattening
  *
- * @param mapper The function to transform each item into a data source (can be sync or async)
+ * @param mapper The function to transform each item into a data source
  * @param parallel Concurrency control: `false`/`undefined`/`1` for sequential (default),
  *   `true` for parallel with auto-detected concurrency (CPU cores), `0` for unbounded concurrency (I/O-heavy tasks),
  *   or a number > 1 for explicit concurrency limit
@@ -688,15 +703,28 @@ export function map<V, R>(
  *
  * @remarks
  *
- * **Flattening Behavior**:
- *
- * - **Primitives** (strings, numbers, booleans, null): Yielded as single atomic items
- * - **Arrays/Iterables** (excluding strings): Items are yielded individually from each mapper result
- * - **Async Iterables/Pipes**: Items are yielded as they become available
- * - **Other values** (objects, etc.): Yielded as single items
- *
  * In parallel mode, when an error occurs all pending operations are awaited
  * (but not failed) before the error is thrown to prevent resource leaks.
+ *
+ * @example
+ *
+ * ```typescript
+ * // Synchronous mapper
+ * await items([1, 2, 3])(flatMap(x => [x, x * 2]))(toArray());
+ * // [1, 2, 2, 4, 3, 6]
+ *
+ * // Async mapper for API calls
+ * await items([1, 2, 3])(flatMap(async id => {
+ *   const response = await fetch(`/api/items/${id}`);
+ *   return response.json();
+ * }))(toArray());
+ *
+ * // Parallel processing
+ * await items([1, 2, 3])(flatMap(async id => {
+ *   const data = await fetchData(id);
+ *   return data.items;
+ * }, { parallel: true }))(toArray());
+ * ```
  */
 export function flatMap<V, R>(
 	mapper: (item: V) => Data<R> | Promise<Data<R>>,

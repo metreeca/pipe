@@ -493,6 +493,79 @@ describe("Feeds", () => {
 
 		});
 
+		it("should create pipe from Promise resolving to value", async () => {
+
+			const values = await items(Promise.resolve(42))(toArray());
+
+			expect(values).toEqual([42]);
+
+		});
+
+		it("should create pipe from Promise resolving to array", async () => {
+
+			const values = await items(Promise.resolve([1, 2, 3]))(toArray());
+
+			expect(values).toEqual([1, 2, 3]);
+
+		});
+
+		it("should create pipe from Promise resolving to iterable", async () => {
+
+			const values = await items(Promise.resolve(new Set([1, 2, 3])))(toArray());
+
+			expect(values).toEqual([1, 2, 3]);
+
+		});
+
+		it("should create pipe from Promise resolving to async iterable", async () => {
+
+			const values = await items(Promise.resolve(range(1, 4)()))(toArray());
+
+			expect(values).toEqual([1, 2, 3]);
+
+		});
+
+		it("should handle Promise resolving to undefined", async () => {
+
+			const values = await items(Promise.resolve(undefined))(toArray());
+
+			expect(values).toEqual([]);
+
+		});
+
+		it("should handle delayed Promise", async () => {
+
+			const delayedData = new Promise<number[]>(resolve => {
+				setTimeout(() => resolve([1, 2, 3]), 10);
+			});
+
+			const values = await items(delayedData)(toArray());
+
+			expect(values).toEqual([1, 2, 3]);
+
+		});
+
+		it("should handle Promise with async operations in pipeline", async () => {
+
+			const values = await items(Promise.resolve([1, 2, 3]))
+			(map(async x => {
+				await new Promise(resolve => setTimeout(resolve, 10));
+				return x*2;
+			}))
+			(toArray());
+
+			expect(values).toEqual([2, 4, 6]);
+
+		});
+
+		it("should filter undefined from Promise-resolved data", async () => {
+
+			const values = await items(Promise.resolve([1, undefined, 2, undefined, 3]))(toArray());
+
+			expect(values).toEqual([1, 2, 3]);
+
+		});
+
 		describe("should create a compliant pipe object", () => {
 
 			it("should return async iterable when called without transform", async () => {
