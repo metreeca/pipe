@@ -19,7 +19,8 @@
       "Skill(typedoc-writer)",
       "Read(//Users/Alessandro/.claude/**)",
       "WebFetch(domain:github.blog)",
-      "Skill(markdown-writer)"
+      "Skill(markdown-writer)",
+      "Bash(npx tsc:*)"
     ],
     "deny": [],
     "ask": []
