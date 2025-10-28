@@ -301,6 +301,34 @@ describe("Feeds", () => {
 
 		});
 
+		describe("should treat strings as atomic values", () => {
+
+			it("should yield string as single item, not character by character", async () => {
+
+				const result = await items("hello")(toArray());
+
+				expect(result).toEqual(["hello"]);
+
+			});
+
+			it("should yield empty string as single item", async () => {
+
+				const result = await items("")(toArray());
+
+				expect(result).toEqual([""]);
+
+			});
+
+			it("should yield strings from array individually", async () => {
+
+				const result = await items(["foo", "bar", "baz"])(toArray());
+
+				expect(result).toEqual(["foo", "bar", "baz"]);
+
+			});
+
+		});
+
 	});
 
 	describe("merge()", () => {
@@ -683,6 +711,22 @@ describe("Tasks", () => {
 			}))(toArray());
 
 			expect(values).toEqual([2]);
+
+		});
+
+		it("should treat returned strings as atomic values", async () => {
+
+			const values = await items([1, 2, 3])(flatMap(x => `value${x}`))(toArray());
+
+			expect(values).toEqual(["value1", "value2", "value3"]);
+
+		});
+
+		it("should treat strings in arrays as items to yield", async () => {
+
+			const values = await items([1, 2])(flatMap(x => [`a${x}`, `b${x}`]))(toArray());
+
+			expect(values).toEqual(["a1", "b1", "a2", "b2"]);
 
 		});
 

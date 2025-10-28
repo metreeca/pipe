@@ -79,7 +79,7 @@
  * @module
  */
 
-import { isAsyncIterable, isFunction, isIterable, isNumber, isPromise } from "@metreeca/core";
+import { isAsyncIterable, isFunction, isIterable, isNumber, isPromise, isString } from "@metreeca/core";
 import { cpus } from "os";
 
 
@@ -245,20 +245,16 @@ export function pipe(source: unknown): unknown {
  *
  * @remarks
  *
+ * **Data Source Handling**:
+ *
+ * - **Primitives** (strings, numbers, booleans, null): Treated as atomic values and yielded as single items
+ * - **Arrays/Iterables** (excluding strings): Items are yielded individually
+ * - **Async Iterables/Pipes**: Items are yielded as they become available
+ * - **Other values** (objects, etc.): Yielded as single items
+ *
  * **When creating custom feeds**, always wrap async iterables with `items()` to ensure
  * `undefined` filtering and proper pipe interface integration. Directly returning raw
  * async iterables bypasses the filtering mechanism.
- *
- * @example
- * ```typescript
- * function customFeed(): Pipe<number> {
- *   return items(async function*() {
- *     yield 1;
- *     yield undefined; // Will be filtered out
- *     yield 2;
- *   }());
- * }
- * ```
  */
 export function items<V>(feed: Data<V>): Pipe<V> {
 
@@ -631,16 +627,15 @@ export function map<V, R>(
  *
  * @remarks
  *
+ * **Flattening Behavior**:
+ *
+ * - **Primitives** (strings, numbers, booleans, null): Yielded as single atomic items
+ * - **Arrays/Iterables** (excluding strings): Items are yielded individually from each mapper result
+ * - **Async Iterables/Pipes**: Items are yielded as they become available
+ * - **Other values** (objects, etc.): Yielded as single items
+ *
  * In parallel mode, when an error occurs all pending operations are awaited
  * (but not failed) before the error is thrown to prevent resource leaks.
- *
- * @example
- *
- * ```typescript
- * flatMap((n: number) => [n, n * 2])                                     // sequential
- * flatMap(async (id: string) => fetchUserPosts(id), { parallel: true })  // parallel
- * flatMap(expandNode, { parallel: 4 })                                   // parallel with limit
- * ```
  */
 export function flatMap<V, R>(
 	mapper: (item: V) => Data<R> | Promise<Data<R>>,
@@ -985,10 +980,27 @@ export function toMap<V, K, R>(
 
 /**
  * Helper to flatten Data<R> into individual items.
+ *
+ * @remarks
+ *
+ * Converts various data sources into an async generator:
+ *
+ * - Functions (Pipe instances): Invokes and yields from the returned async iterable
+ * - Async iterables: Yields items directly from the async iterable
+ * - Sync iterables (excluding strings): Yields items from the iterable
+ * - All other values (primitives, objects, etc.): Yields the value as a single item
+ *
+ * **String Handling**: Strings are treated as atomic values and yielded whole, not
+ * iterated character by character, ensuring consistent behavior where they represent
+ * single data items rather than character sequences.
  */
 async function* flatten<R>(data: Data<R>): AsyncGenerator<R, void, unknown> {
 
-	if ( isFunction(data) ) {
+	if ( isString(data) ) {
+
+		yield data as R;
+
+	} else if ( isFunction(data) ) {
 
 		yield* data();
 
