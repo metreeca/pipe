@@ -482,11 +482,11 @@ export function take<V>(n: number): Task<V> {
  *
  * @typeParam V The type of items in the stream
  *
- * @param consumer The function to execute for each item
+ * @param consumer The function to execute for each item (return value is ignored)
  *
  * @returns A task that executes the consumer for each item
  */
-export function peek<V>(consumer: (item: V) => void | Promise<void>): Task<V> {
+export function peek<V>(consumer: (item: V) => unknown): Task<V> {
 	return async function* (source: AsyncIterable<V>) {
 		for await (const item of source) {
 			await consumer(item);
@@ -745,11 +745,11 @@ export function count<V>(): Sink<V, number> {
  *
  * @typeParam V The type of items in the stream
  *
- * @param consumer The function to execute for each item
+ * @param consumer The function to execute for each item (return value is ignored)
  *
  * @returns A sink that executes the consumer for each item
  */
-export function forEach<V>(consumer: (item: V) => void | Promise<void>): Sink<V, void> {
+export function forEach<V>(consumer: (item: V) => unknown): Sink<V, void> {
 	return async source => {
 
 		for await (const item of source) {

@@ -148,7 +148,7 @@ await pipe(
 Alternatively, call `pipe()` without a sink to get the underlying async iterable for manual iteration.
 
 ```typescript
-import { pipe, items, filter } from '@metreeca/pipe';
+import { filter, items, pipe } from "@metreeca/pipe";
 
 const iterable = pipe(
 	(items([1, 2, 3]))
