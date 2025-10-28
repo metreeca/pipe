@@ -267,13 +267,13 @@ export function items<V>(...values: readonly [V, V, ...V[]]): Pipe<V>;
 
 export function items<V>(feed: Data<V>, ...values: V[]): Pipe<V> {
 
-	const generator = async function* () {
+	async function* generator() {
 		for await (const item of flatten(values.length > 0 ? [feed, ...values] as V[] : feed)) {
 			if ( item !== undefined ) {
 				yield item;
 			}
 		}
-	};
+	}
 
 	function pipe(): AsyncIterable<V>;
 	function pipe<R>(task: Task<V, R>): Pipe<R>;
@@ -301,6 +301,7 @@ export function items<V>(feed: Data<V>, ...values: V[]): Pipe<V> {
  * Creates a pipe that yields a sequence of numbers within a range.
  *
  * Generates numbers in ascending order if `start` < `end`, or descending order if `start` > `end`.
+ * Returns an empty sequence if `start` === `end`.
  *
  * @group Feeds
  *
@@ -311,23 +312,64 @@ export function items<V>(feed: Data<V>, ...values: V[]): Pipe<V> {
  */
 export function range(start: number, end: number): Pipe<number> {
 
-	async function* generator() {
+	return items((function* () {
+
 		if ( start < end ) {
 
 			for (let i = start; i < end; i++) {
 				yield i;
 			}
 
-		} else {
+		} else if ( start > end ) {
 
 			for (let i = start; i > end; i--) {
 				yield i;
 			}
 
 		}
-	}
 
-	return items(generator());
+	})());
+
+}
+
+/**
+ * Creates a pipe by repeatedly calling a generator function until exhausted.
+ *
+ * The generator is called on demand and returned data is flattened into the stream.
+ * Iteration stops when the generator returns `undefined`, an empty array, or an empty iterator.
+ *
+ * @group Feeds
+ *
+ * @typeParam V The type of items in the stream
+ *
+ * @param generator The function to call repeatedly to generate data, returning `undefined` to terminate
+ *
+ * @returns A pipe yielding items from successive generator calls
+ */
+export function iterate<V>(generator: () => Data<V> | undefined): Pipe<V> {
+
+	return items((async function* () {
+
+		for (let data = generator(); data !== undefined; data = generator()) {
+
+			const iterable = flatten(data);
+			const iterator = iterable[Symbol.asyncIterator]();
+			const first = await iterator.next();
+
+			if ( first.done ) {
+
+				return;
+
+			} else {
+
+				yield first.value;
+				yield* iterator;
+
+			}
+		}
+
+	})());
+
 }
 
 
@@ -348,15 +390,14 @@ export function range(start: number, end: number): Pipe<number> {
  */
 export function chain<V>(...sources: readonly Pipe<V>[]): Pipe<V> {
 
-	const generator = async function* () {
+	return items((async function* () {
 
 		for (const source of sources) {
 			yield* source();
 		}
 
-	};
+	})());
 
-	return items(generator());
 }
 
 /**
@@ -375,7 +416,7 @@ export function chain<V>(...sources: readonly Pipe<V>[]): Pipe<V> {
  */
 export function merge<V>(...sources: readonly Pipe<V>[]): Pipe<V> {
 
-	const generator = async function* () {
+	return items((async function* () {
 
 		const iterators = sources.map(source => source()[Symbol.asyncIterator]());
 
@@ -414,9 +455,9 @@ export function merge<V>(...sources: readonly Pipe<V>[]): Pipe<V> {
 			);
 
 		}
-	};
 
-	return items(generator());
+	})());
+
 }
 
 

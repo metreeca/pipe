@@ -31,17 +31,17 @@ npm install @metreeca/pipe
 
 **@metreeca/pipe** provides four main abstractions:
 
-- **Pipes**: Fluent interface for composing operations on async iterables
-- **Feeds**: Functions that create pipes from various sources
-- **Tasks**: Intermediate transformations that can be chained
-- **Sinks**: Terminal operations that consume iterables and produce results
+- **Pipes**: Async iterables with a composable API
+- **Feeds**: Create pipes from arrays, ranges, generators, and other sources
+- **Tasks**: Transform items with map, filter, and other operations
+- **Sinks**: Collect results into arrays, reduce values, find items, etc.
 
 ## Creating Pipes
 
 [Create pipes](https://metreeca.github.io/pipe/modules.html#Feeds) from various data sources.
 
 ```typescript
-import { range, items, merge } from '@metreeca/pipe';
+import { range, items, chain, merge, iterate } from '@metreeca/pipe';
 
 items(42);                  // from single values
 items(1, 2, 3, 4, 5);       // from multiple scalar values
@@ -51,6 +51,11 @@ items(asyncGenerator());    // from async iterables
 items(pipe);                // from pipes
 
 range(10, 0);               // 10, 9, 8, ..., 1
+
+iterate(() => {             // from repeated generator calls
+	let count = 0;
+	return count < 3 ? count++ : undefined;
+});
 
 chain(                      // sequential consumption
   items([1, 2, 3]),

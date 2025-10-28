@@ -26,6 +26,7 @@ import {
 	flatMap,
 	forEach,
 	items,
+	iterate,
 	map,
 	merge,
 	peek,
@@ -46,7 +47,7 @@ describe("Pipes", () => {
 
 	it("should return promise value directly", async () => {
 
-		const value=await pipe(Promise.resolve(42));
+		const value = await pipe(Promise.resolve(42));
 
 		expect(value).toBe(42);
 
@@ -54,7 +55,7 @@ describe("Pipes", () => {
 
 	it("should retrieve async iterable from pipe", async () => {
 
-		const values=await items(pipe(items(range(1, 4))))(toArray());
+		const values = await items(pipe(items(range(1, 4))))(toArray());
 
 		expect(values).toEqual([1, 2, 3]);
 
@@ -62,9 +63,9 @@ describe("Pipes", () => {
 
 	it("should return async iterable for manual iteration", async () => {
 
-		const iterable=pipe((items([1, 2, 3, 4]))(filter(x => x > 1)));
+		const iterable = pipe((items([1, 2, 3, 4]))(filter(x => x > 1)));
 
-		const values: number[]=[];
+		const values: number[] = [];
 
 		for await (const value of iterable) {
 			values.push(value);
@@ -82,7 +83,7 @@ describe("Feeds", () => {
 
 		it("should generate ascending range", async () => {
 
-			const values=await range(1, 5)(toArray());
+			const values = await range(1, 5)(toArray());
 
 			expect(values).toEqual([1, 2, 3, 4]);
 
@@ -90,7 +91,7 @@ describe("Feeds", () => {
 
 		it("should generate descending range", async () => {
 
-			const values=await range(5, 1)(toArray());
+			const values = await range(5, 1)(toArray());
 
 			expect(values).toEqual([5, 4, 3, 2]);
 
@@ -98,7 +99,7 @@ describe("Feeds", () => {
 
 		it("should generate empty range when start equals end", async () => {
 
-			const values=await range(3, 3)(toArray());
+			const values = await range(3, 3)(toArray());
 
 			expect(values).toEqual([]);
 
@@ -106,7 +107,7 @@ describe("Feeds", () => {
 
 		it("should work with negative numbers", async () => {
 
-			const values=await range(-2, 2)(toArray());
+			const values = await range(-2, 2)(toArray());
 
 			expect(values).toEqual([-2, -1, 0, 1]);
 
@@ -139,11 +140,222 @@ describe("Feeds", () => {
 
 	});
 
+	describe("iterate()", () => {
+
+		it("should repeatedly call generator until undefined", async () => {
+
+			function counter() {
+				let count = 0;
+				return () => count >= 3 ? undefined : count++;
+			}
+
+			const values = await iterate(counter())(toArray());
+
+			expect(values).toEqual([0, 1, 2]);
+
+		});
+
+		it("should stop on empty array", async () => {
+
+			function counter() {
+				let count = 0;
+				return () => count >= 2 ? [] : [count++];
+			}
+
+			const values = await iterate(counter())(toArray());
+
+			expect(values).toEqual([0, 1]);
+
+		});
+
+		it("should stop on empty iterator", async () => {
+
+			function counter() {
+				let count = 0;
+				return () => count >= 2 ? new Set() : new Set([count++]);
+			}
+
+			const values = await iterate(counter())(toArray());
+
+			expect(values).toEqual([0, 1]);
+
+		});
+
+		it("should flatten arrays from each call", async () => {
+
+			function pager() {
+				let page = 0;
+				return () => {
+					if ( page >= 3 ) {
+						return undefined;
+					}
+					const start = page*2;
+					page++;
+					return [start, start+1];
+				};
+			}
+
+			const values = await iterate(pager())(toArray());
+
+			expect(values).toEqual([0, 1, 2, 3, 4, 5]);
+
+		});
+
+		it("should handle single values", async () => {
+
+			function counter() {
+				let count = 0;
+				return () => count >= 3 ? undefined : count++;
+			}
+
+			const values = await iterate(counter())(toArray());
+
+			expect(values).toEqual([0, 1, 2]);
+
+		});
+
+		it("should handle iterables", async () => {
+
+			function pager() {
+				let page = 0;
+				return () => {
+					if ( page >= 2 ) {
+						return undefined;
+					}
+					const start = page*2;
+					page++;
+					return new Set([start, start+1]);
+				};
+			}
+
+			const values = await iterate(pager())(toArray());
+
+			expect(values).toEqual([0, 1, 2, 3]);
+
+		});
+
+		it("should handle pipes", async () => {
+
+			function counter() {
+				let count = 0;
+				return () => count >= 2 ? undefined : range(count++, count);
+			}
+
+			const values = await iterate(counter())(toArray());
+
+			expect(values).toEqual([0, 1]);
+
+		});
+
+		it("should treat strings as atomic values", async () => {
+
+			function counter() {
+				let count = 0;
+				return () => count >= 3 ? undefined : `value${count++}`;
+			}
+
+			const values = await iterate(counter())(toArray());
+
+			expect(values).toEqual(["value0", "value1", "value2"]);
+
+		});
+
+		it("should handle empty stream when first call returns undefined", async () => {
+
+			const values = await iterate(() => undefined)(toArray());
+
+			expect(values).toEqual([]);
+
+		});
+
+		it("should handle empty stream when first call returns empty array", async () => {
+
+			const values = await iterate(() => [])(toArray());
+
+			expect(values).toEqual([]);
+
+		});
+
+		it("should work with generator tracking state", async () => {
+
+			const pages = ["page1", "page2", "page3"];
+			let index = 0;
+
+			const values = await iterate(() => {
+				if ( index >= pages.length ) {
+					return undefined;
+				}
+				return pages[index++];
+			})(toArray());
+
+			expect(values).toEqual(["page1", "page2", "page3"]);
+
+		});
+
+		describe("should create a compliant pipe object", () => {
+
+			it("should return async iterable when called without transform", async () => {
+				function counter() {
+					let count = 0;
+					return () => count >= 3 ? undefined : [count++];
+				}
+
+				const values = await pipe(
+					iterate(counter())
+					(toArray())
+				);
+				expect(values).toEqual([0, 1, 2]);
+			});
+
+			it("should apply task and return new pipe", async () => {
+				function counter() {
+					let count = 0;
+					return () => count >= 3 ? undefined : count++;
+				}
+
+				const values = await pipe(
+					iterate(counter())
+					(map(x => x*2))
+					(toArray())
+				);
+				expect(values).toEqual([0, 2, 4]);
+			});
+
+			it("should apply sink and return promise", async () => {
+				function counter() {
+					let count = 0;
+					return () => count >= 4 ? undefined : count++;
+				}
+
+				expect(await pipe(
+					iterate(counter())
+					(reduce((acc, x) => acc+x, 0))
+				)).toBe(6);
+			});
+
+			it("should chain multiple tasks", async () => {
+				function counter() {
+					let count = 0;
+					return () => count >= 6 ? undefined : count++;
+				}
+
+				expect(await pipe(
+					iterate(counter())
+					(filter(x => x%2 === 0))
+					(map(x => x*2))
+					(toArray())
+				)).toEqual([0, 4, 8]);
+			});
+
+		});
+
+	});
+
 	describe("items()", () => {
 
 		it("should create pipe from single value", async () => {
 
-			const values=await items(42)(toArray());
+			const values = await items(42)(toArray());
 
 			expect(values).toEqual([42]);
 
@@ -151,7 +363,7 @@ describe("Feeds", () => {
 
 		it("should create pipe from array", async () => {
 
-			const values=await items([1, 2, 3])(toArray());
+			const values = await items([1, 2, 3])(toArray());
 
 			expect(values).toEqual([1, 2, 3]);
 
@@ -159,7 +371,7 @@ describe("Feeds", () => {
 
 		it("should create pipe from iterable", async () => {
 
-			const values=await items(new Set([1, 2, 3]))(toArray());
+			const values = await items(new Set([1, 2, 3]))(toArray());
 
 			expect(values).toEqual([1, 2, 3]);
 
@@ -167,7 +379,7 @@ describe("Feeds", () => {
 
 		it("should create pipe from async iterable", async () => {
 
-			const values=await items(range(1, 4))(toArray());
+			const values = await items(range(1, 4))(toArray());
 
 			expect(values).toEqual([1, 2, 3]);
 
@@ -397,7 +609,7 @@ describe("Feeds", () => {
 
 		it("should merge multiple pipes", async () => {
 
-			const values=await merge(range(1, 3), range(10, 12))(toArray());
+			const values = await merge(range(1, 3), range(10, 12))(toArray());
 
 			expect([...values].sort((a, b) => a-b)).toEqual([1, 2, 10, 11]);
 
@@ -405,7 +617,7 @@ describe("Feeds", () => {
 
 		it("should handle empty pipes", async () => {
 
-			const values=await merge(range(1, 1), range(2, 2))(toArray());
+			const values = await merge(range(1, 1), range(2, 2))(toArray());
 
 			expect(values).toEqual([]);
 
@@ -413,7 +625,7 @@ describe("Feeds", () => {
 
 		it("should clean up iterators on early termination", async () => {
 
-			const cleanup: string[]=[];
+			const cleanup: string[] = [];
 
 			function tracked(name: string): Pipe<number> {
 				return items((async function* () {
@@ -426,8 +638,8 @@ describe("Feeds", () => {
 				})());
 			}
 
-			const merged=merge(tracked("a"), tracked("b"));
-			const iterator=merged()[Symbol.asyncIterator]();
+			const merged = merge(tracked("a"), tracked("b"));
+			const iterator = merged()[Symbol.asyncIterator]();
 
 			await iterator.next();
 			await iterator.return?.();
@@ -439,12 +651,12 @@ describe("Feeds", () => {
 		describe("should create a compliant pipe object", () => {
 
 			it("should return async iterable when called without transform", async () => {
-				const values=await pipe(merge(range(1, 3), range(10, 12))(toArray()));
+				const values = await pipe(merge(range(1, 3), range(10, 12))(toArray()));
 				expect([...values].sort((a, b) => a-b)).toEqual([1, 2, 10, 11]);
 			});
 
 			it("should apply task and return new pipe", async () => {
-				const values=await pipe(merge(range(1, 3), range(10, 12))(map(x => x*2))(toArray()));
+				const values = await pipe(merge(range(1, 3), range(10, 12))(map(x => x*2))(toArray()));
 				expect([...values].sort((a, b) => a-b)).toEqual([2, 4, 20, 22]);
 			});
 
@@ -453,7 +665,7 @@ describe("Feeds", () => {
 			});
 
 			it("should chain multiple tasks", async () => {
-				const values=await pipe(
+				const values = await pipe(
 					merge(range(1, 4), range(10, 13))
 					(filter(x => x%2 === 0))
 					(map(x => x*2))
@@ -470,7 +682,7 @@ describe("Feeds", () => {
 
 		it("should chain multiple pipes in order", async () => {
 
-			const values=await chain(range(1, 3), range(10, 12))(toArray());
+			const values = await chain(range(1, 3), range(10, 12))(toArray());
 
 			expect(values).toEqual([1, 2, 10, 11]);
 
@@ -478,7 +690,7 @@ describe("Feeds", () => {
 
 		it("should preserve source order", async () => {
 
-			const values=await chain(range(5, 7), range(1, 3), range(10, 12))(toArray());
+			const values = await chain(range(5, 7), range(1, 3), range(10, 12))(toArray());
 
 			expect(values).toEqual([5, 6, 1, 2, 10, 11]);
 
@@ -486,7 +698,7 @@ describe("Feeds", () => {
 
 		it("should handle empty pipes", async () => {
 
-			const values=await chain(range(1, 1), range(2, 2))(toArray());
+			const values = await chain(range(1, 1), range(2, 2))(toArray());
 
 			expect(values).toEqual([]);
 
@@ -494,7 +706,7 @@ describe("Feeds", () => {
 
 		it("should handle single pipe", async () => {
 
-			const values=await chain(range(1, 4))(toArray());
+			const values = await chain(range(1, 4))(toArray());
 
 			expect(values).toEqual([1, 2, 3]);
 
@@ -502,7 +714,7 @@ describe("Feeds", () => {
 
 		it("should fully consume each source before next", async () => {
 
-			const order: string[]=[];
+			const order: string[] = [];
 
 			function tracked(name: string, values: number[]): Pipe<number> {
 				return items((async function* () {
@@ -522,12 +734,12 @@ describe("Feeds", () => {
 		describe("should create a compliant pipe object", () => {
 
 			it("should return async iterable when called without transform", async () => {
-				const values=await pipe(chain(range(1, 3), range(10, 12))(toArray()));
+				const values = await pipe(chain(range(1, 3), range(10, 12))(toArray()));
 				expect(values).toEqual([1, 2, 10, 11]);
 			});
 
 			it("should apply task and return new pipe", async () => {
-				const values=await pipe(chain(range(1, 3), range(10, 12))(map(x => x*2))(toArray()));
+				const values = await pipe(chain(range(1, 3), range(10, 12))(map(x => x*2))(toArray()));
 				expect(values).toEqual([2, 4, 20, 22]);
 			});
 
@@ -536,7 +748,7 @@ describe("Feeds", () => {
 			});
 
 			it("should chain multiple tasks", async () => {
-				const values=await pipe(
+				const values = await pipe(
 					chain(range(1, 4), range(10, 13))
 					(filter(x => x%2 === 0))
 					(map(x => x*2))
@@ -557,7 +769,7 @@ describe("Tasks", () => {
 
 		it("should skip first n items", async () => {
 
-			const values=await items([1, 2, 3, 4, 5])(skip(2))(toArray());
+			const values = await items([1, 2, 3, 4, 5])(skip(2))(toArray());
 
 			expect(values).toEqual([3, 4, 5]);
 
@@ -565,7 +777,7 @@ describe("Tasks", () => {
 
 		it("should skip all items when n >= length", async () => {
 
-			const values=await items([1, 2, 3])(skip(5))(toArray());
+			const values = await items([1, 2, 3])(skip(5))(toArray());
 
 			expect(values).toEqual([]);
 
@@ -573,7 +785,7 @@ describe("Tasks", () => {
 
 		it("should skip zero items", async () => {
 
-			const values=await items([1, 2, 3])(skip(0))(toArray());
+			const values = await items([1, 2, 3])(skip(0))(toArray());
 
 			expect(values).toEqual([1, 2, 3]);
 
@@ -581,7 +793,7 @@ describe("Tasks", () => {
 
 		it("should treat negative n as zero", async () => {
 
-			const values=await items([1, 2, 3])(skip(-5))(toArray());
+			const values = await items([1, 2, 3])(skip(-5))(toArray());
 
 			expect(values).toEqual([1, 2, 3]);
 
@@ -593,7 +805,7 @@ describe("Tasks", () => {
 
 		it("should take first n items", async () => {
 
-			const values=await items([1, 2, 3, 4, 5])(take(3))(toArray());
+			const values = await items([1, 2, 3, 4, 5])(take(3))(toArray());
 
 			expect(values).toEqual([1, 2, 3]);
 
@@ -601,7 +813,7 @@ describe("Tasks", () => {
 
 		it("should take all items when n >= length", async () => {
 
-			const values=await items([1, 2, 3])(take(5))(toArray());
+			const values = await items([1, 2, 3])(take(5))(toArray());
 
 			expect(values).toEqual([1, 2, 3]);
 
@@ -609,7 +821,7 @@ describe("Tasks", () => {
 
 		it("should take zero items", async () => {
 
-			const values=await items([1, 2, 3])(take(0))(toArray());
+			const values = await items([1, 2, 3])(take(0))(toArray());
 
 			expect(values).toEqual([]);
 
@@ -617,7 +829,7 @@ describe("Tasks", () => {
 
 		it("should treat negative n as zero", async () => {
 
-			const values=await items([1, 2, 3])(take(-5))(toArray());
+			const values = await items([1, 2, 3])(take(-5))(toArray());
 
 			expect(values).toEqual([]);
 
@@ -629,8 +841,8 @@ describe("Tasks", () => {
 
 		it("should execute side effect for each item", async () => {
 
-			const sideEffects: number[]=[];
-			const values=await items([1, 2, 3])(peek(x => {
+			const sideEffects: number[] = [];
+			const values = await items([1, 2, 3])(peek(x => {
 				sideEffects.push(x*10);
 			}))(toArray());
 
@@ -641,8 +853,8 @@ describe("Tasks", () => {
 
 		it("should support async consumers", async () => {
 
-			const sideEffects: number[]=[];
-			const values=await items([1, 2, 3])(peek(async x => {
+			const sideEffects: number[] = [];
+			const values = await items([1, 2, 3])(peek(async x => {
 				await Promise.resolve();
 				sideEffects.push(x);
 			}))(toArray());
@@ -658,7 +870,7 @@ describe("Tasks", () => {
 
 		it("should filter items by predicate", async () => {
 
-			const values=await items([1, 2, 3, 4, 5])(filter(x => x%2 === 0))(toArray());
+			const values = await items([1, 2, 3, 4, 5])(filter(x => x%2 === 0))(toArray());
 
 			expect(values).toEqual([2, 4]);
 
@@ -666,7 +878,7 @@ describe("Tasks", () => {
 
 		it("should support async predicates", async () => {
 
-			const values=await items([1, 2, 3, 4, 5])(filter(async x => {
+			const values = await items([1, 2, 3, 4, 5])(filter(async x => {
 				await Promise.resolve();
 				return x > 2;
 			}))(toArray());
@@ -677,7 +889,7 @@ describe("Tasks", () => {
 
 		it("should handle empty results", async () => {
 
-			const values=await items([1, 2, 3])(filter(() => false))(toArray());
+			const values = await items([1, 2, 3])(filter(() => false))(toArray());
 
 			expect(values).toEqual([]);
 
@@ -689,7 +901,7 @@ describe("Tasks", () => {
 
 		it("should filter out duplicate primitives", async () => {
 
-			const values=await items([1, 2, 2, 3, 1, 4])(distinct())(toArray());
+			const values = await items([1, 2, 2, 3, 1, 4])(distinct())(toArray());
 
 			expect(values).toEqual([1, 2, 3, 4]);
 
@@ -697,7 +909,7 @@ describe("Tasks", () => {
 
 		it("should use selector for comparison", async () => {
 
-			const values=await items([
+			const values = await items([
 				{ id: 1, name: "a" },
 				{ id: 2, name: "b" },
 				{ id: 1, name: "c" }
@@ -712,7 +924,7 @@ describe("Tasks", () => {
 
 		it("should handle empty stream", async () => {
 
-			const values=await items([] as number[])(distinct())(toArray());
+			const values = await items([] as number[])(distinct())(toArray());
 
 			expect(values).toEqual([]);
 
@@ -724,7 +936,7 @@ describe("Tasks", () => {
 
 		it("should transform items", async () => {
 
-			const values=await items([1, 2, 3])(map(x => x*2))(toArray());
+			const values = await items([1, 2, 3])(map(x => x*2))(toArray());
 
 			expect(values).toEqual([2, 4, 6]);
 
@@ -732,7 +944,7 @@ describe("Tasks", () => {
 
 		it("should support async mappers", async () => {
 
-			const values=await items([1, 2, 3])(map(async x => {
+			const values = await items([1, 2, 3])(map(async x => {
 				await Promise.resolve();
 				return x*2;
 			}))(toArray());
@@ -743,7 +955,7 @@ describe("Tasks", () => {
 
 		it("should change item types", async () => {
 
-			const values=await items([1, 2, 3])(map(x => `value-${x}`))(toArray());
+			const values = await items([1, 2, 3])(map(x => `value-${x}`))(toArray());
 
 			expect(values).toEqual(["value-1", "value-2", "value-3"]);
 
@@ -755,7 +967,7 @@ describe("Tasks", () => {
 
 		it("should flatten mapped async iterables", async () => {
 
-			const values=await items([1, 2, 3])(flatMap(async function* (x) {
+			const values = await items([1, 2, 3])(flatMap(async function* (x) {
 				yield x;
 				yield x*10;
 			}))(toArray());
@@ -766,7 +978,7 @@ describe("Tasks", () => {
 
 		it("should handle empty iterables", async () => {
 
-			const values=await items([1, 2, 3])(flatMap(async function* (x) {
+			const values = await items([1, 2, 3])(flatMap(async function* (x) {
 				if ( x === 2 ) {
 					yield x;
 				}
@@ -1108,7 +1320,7 @@ describe("Tasks", () => {
 
 		it("should group items into batches of specified size", async () => {
 
-			const values=await items([1, 2, 3, 4, 5])(batch(2))(toArray());
+			const values = await items([1, 2, 3, 4, 5])(batch(2))(toArray());
 
 			expect(values).toEqual([[1, 2], [3, 4], [5]]);
 
@@ -1116,7 +1328,7 @@ describe("Tasks", () => {
 
 		it("should collect all items when size is 0", async () => {
 
-			const values=await items([1, 2, 3, 4, 5])(batch(0))(toArray());
+			const values = await items([1, 2, 3, 4, 5])(batch(0))(toArray());
 
 			expect(values).toEqual([[1, 2, 3, 4, 5]]);
 
@@ -1124,7 +1336,7 @@ describe("Tasks", () => {
 
 		it("should handle empty stream", async () => {
 
-			const values=await items([] as number[])(batch(2))(toArray());
+			const values = await items([] as number[])(batch(2))(toArray());
 
 			expect(values).toEqual([]);
 
@@ -1132,7 +1344,7 @@ describe("Tasks", () => {
 
 		it("should yield final partial batch", async () => {
 
-			const values=await items([1, 2, 3])(batch(2))(toArray());
+			const values = await items([1, 2, 3])(batch(2))(toArray());
 
 			expect(values).toEqual([[1, 2], [3]]);
 
@@ -1140,7 +1352,7 @@ describe("Tasks", () => {
 
 		it("should create individual batches when size is 1", async () => {
 
-			const values=await items([1, 2, 3, 4])(batch(1))(toArray());
+			const values = await items([1, 2, 3, 4])(batch(1))(toArray());
 
 			expect(values).toEqual([[1], [2], [3], [4]]);
 
@@ -1148,7 +1360,7 @@ describe("Tasks", () => {
 
 		it("should process batches through pipeline", async () => {
 
-			const result=await items([1, 2, 3, 4, 5, 6, 7])
+			const result = await items([1, 2, 3, 4, 5, 6, 7])
 			(batch(3))
 			(map(batch => batch.reduce((sum, n) => sum+n, 0)))
 			(toArray());
@@ -1167,7 +1379,7 @@ describe("Sinks", () => {
 
 		it("should reduce with initial value", async () => {
 
-			const sum=await items([1, 2, 3, 4])(reduce((acc, x) => acc+x, 0));
+			const sum = await items([1, 2, 3, 4])(reduce((acc, x) => acc+x, 0));
 
 			expect(sum).toBe(10);
 
@@ -1175,7 +1387,7 @@ describe("Sinks", () => {
 
 		it("should reduce without initial value", async () => {
 
-			const sum=await items([1, 2, 3, 4])(reduce((acc, x) => acc+x));
+			const sum = await items([1, 2, 3, 4])(reduce((acc, x) => acc+x));
 
 			expect(sum).toBe(10);
 
@@ -1183,7 +1395,7 @@ describe("Sinks", () => {
 
 		it("should return undefined for empty stream without initial", async () => {
 
-			const result=await items([] as number[])(reduce((acc, x) => acc+x));
+			const result = await items([] as number[])(reduce((acc, x) => acc+x));
 
 			expect(result).toBeUndefined();
 
@@ -1191,7 +1403,7 @@ describe("Sinks", () => {
 
 		it("should return initial for empty stream with initial", async () => {
 
-			const result=await items([] as number[])(reduce((acc, x) => acc+x, 100));
+			const result = await items([] as number[])(reduce((acc, x) => acc+x, 100));
 
 			expect(result).toBe(100);
 
@@ -1199,7 +1411,7 @@ describe("Sinks", () => {
 
 		it("should support async reducers", async () => {
 
-			const sum=await items([1, 2, 3])(reduce(async (acc, x) => {
+			const sum = await items([1, 2, 3])(reduce(async (acc, x) => {
 				await Promise.resolve();
 				return acc+x;
 			}, 0));
@@ -1214,7 +1426,7 @@ describe("Sinks", () => {
 
 		it("should find first matching item", async () => {
 
-			const result=await items([1, 2, 3, 4, 5])(find(x => x > 2));
+			const result = await items([1, 2, 3, 4, 5])(find(x => x > 2));
 
 			expect(result).toBe(3);
 
@@ -1222,7 +1434,7 @@ describe("Sinks", () => {
 
 		it("should return undefined when no match", async () => {
 
-			const result=await items([1, 2, 3])(find(x => x > 10));
+			const result = await items([1, 2, 3])(find(x => x > 10));
 
 			expect(result).toBeUndefined();
 
@@ -1230,7 +1442,7 @@ describe("Sinks", () => {
 
 		it("should support async predicates", async () => {
 
-			const result=await items([1, 2, 3, 4])(find(async x => {
+			const result = await items([1, 2, 3, 4])(find(async x => {
 				await Promise.resolve();
 				return x === 3;
 			}));
@@ -1245,7 +1457,7 @@ describe("Sinks", () => {
 
 		it("should return true when any item matches", async () => {
 
-			const result=await items([1, 2, 3, 4])(some(x => x > 3));
+			const result = await items([1, 2, 3, 4])(some(x => x > 3));
 
 			expect(result).toBe(true);
 
@@ -1253,7 +1465,7 @@ describe("Sinks", () => {
 
 		it("should return false when no items match", async () => {
 
-			const result=await items([1, 2, 3])(some(x => x > 10));
+			const result = await items([1, 2, 3])(some(x => x > 10));
 
 			expect(result).toBe(false);
 
@@ -1261,7 +1473,7 @@ describe("Sinks", () => {
 
 		it("should support async predicates", async () => {
 
-			const result=await items([1, 2, 3])(some(async x => {
+			const result = await items([1, 2, 3])(some(async x => {
 				await Promise.resolve();
 				return x === 2;
 			}));
@@ -1276,7 +1488,7 @@ describe("Sinks", () => {
 
 		it("should return true when all items match", async () => {
 
-			const result=await items([1, 2, 3, 4])(every(x => x > 0));
+			const result = await items([1, 2, 3, 4])(every(x => x > 0));
 
 			expect(result).toBe(true);
 
@@ -1284,7 +1496,7 @@ describe("Sinks", () => {
 
 		it("should return false when any item doesn't match", async () => {
 
-			const result=await items([1, 2, 3, 4])(every(x => x < 3));
+			const result = await items([1, 2, 3, 4])(every(x => x < 3));
 
 			expect(result).toBe(false);
 
@@ -1292,7 +1504,7 @@ describe("Sinks", () => {
 
 		it("should support async predicates", async () => {
 
-			const result=await items([1, 2, 3])(every(async x => {
+			const result = await items([1, 2, 3])(every(async x => {
 				await Promise.resolve();
 				return x > 0;
 			}));
@@ -1303,7 +1515,7 @@ describe("Sinks", () => {
 
 		it("should return true for empty stream", async () => {
 
-			const result=await items([] as number[])(every(x => x > 10));
+			const result = await items([] as number[])(every(x => x > 10));
 
 			expect(result).toBe(true);
 
@@ -1315,7 +1527,7 @@ describe("Sinks", () => {
 
 		it("should collect all items into array", async () => {
 
-			const values=await items([1, 2, 3])(toArray());
+			const values = await items([1, 2, 3])(toArray());
 
 			expect(values).toEqual([1, 2, 3]);
 
@@ -1323,7 +1535,7 @@ describe("Sinks", () => {
 
 		it("should handle empty stream", async () => {
 
-			const values=await items([] as number[])(toArray());
+			const values = await items([] as number[])(toArray());
 
 			expect(values).toEqual([]);
 
@@ -1335,7 +1547,7 @@ describe("Sinks", () => {
 
 		it("should collect all items into set", async () => {
 
-			const values=await items([1, 2, 3])(toSet());
+			const values = await items([1, 2, 3])(toSet());
 
 			expect(values).toEqual(new Set([1, 2, 3]));
 
@@ -1343,7 +1555,7 @@ describe("Sinks", () => {
 
 		it("should remove duplicates", async () => {
 
-			const values=await items([1, 2, 2, 3, 1, 4])(toSet());
+			const values = await items([1, 2, 2, 3, 1, 4])(toSet());
 
 			expect(values).toEqual(new Set([1, 2, 3, 4]));
 
@@ -1351,7 +1563,7 @@ describe("Sinks", () => {
 
 		it("should handle empty stream", async () => {
 
-			const values=await items([] as number[])(toSet());
+			const values = await items([] as number[])(toSet());
 
 			expect(values).toEqual(new Set());
 
@@ -1359,7 +1571,7 @@ describe("Sinks", () => {
 
 		it("should preserve insertion order", async () => {
 
-			const values=await items([3, 1, 2])(toSet());
+			const values = await items([3, 1, 2])(toSet());
 
 			expect([...values]).toEqual([3, 1, 2]);
 
@@ -1371,7 +1583,7 @@ describe("Sinks", () => {
 
 		it("should collect items into map using key selector", async () => {
 
-			const values=await items([
+			const values = await items([
 				{ id: 1, name: "a" },
 				{ id: 2, name: "b" },
 				{ id: 3, name: "c" }
@@ -1387,7 +1599,7 @@ describe("Sinks", () => {
 
 		it("should collect items into map using key and value selectors", async () => {
 
-			const values=await items([
+			const values = await items([
 				{ id: 1, name: "a" },
 				{ id: 2, name: "b" },
 				{ id: 3, name: "c" }
@@ -1403,7 +1615,7 @@ describe("Sinks", () => {
 
 		it("should support async key selectors", async () => {
 
-			const values=await items([
+			const values = await items([
 				{ id: 1, name: "a" },
 				{ id: 2, name: "b" }
 			])(toMap(async item => {
@@ -1420,7 +1632,7 @@ describe("Sinks", () => {
 
 		it("should support async value selectors", async () => {
 
-			const values=await items([
+			const values = await items([
 				{ id: 1, name: "a" },
 				{ id: 2, name: "b" }
 			])(toMap(
@@ -1440,7 +1652,7 @@ describe("Sinks", () => {
 
 		it("should overwrite duplicate keys", async () => {
 
-			const values=await items([
+			const values = await items([
 				{ id: 1, name: "a" },
 				{ id: 2, name: "b" },
 				{ id: 1, name: "c" }
@@ -1455,7 +1667,7 @@ describe("Sinks", () => {
 
 		it("should handle empty stream", async () => {
 
-			const values=await items([] as { id: number; name: string }[])(toMap(item => item.id));
+			const values = await items([] as { id: number; name: string }[])(toMap(item => item.id));
 
 			expect(values).toEqual(new Map());
 
@@ -1463,7 +1675,7 @@ describe("Sinks", () => {
 
 		it("should preserve insertion order", async () => {
 
-			const values=await items([3, 1, 2])(toMap(x => x));
+			const values = await items([3, 1, 2])(toMap(x => x));
 
 			expect([...values.keys()]).toEqual([3, 1, 2]);
 
@@ -1519,7 +1731,7 @@ describe("Sinks", () => {
 
 		it("should execute consumer for each item", async () => {
 
-			const sideEffects: number[]=[];
+			const sideEffects: number[] = [];
 
 			await items([1, 2, 3])(forEach(x => {
 				sideEffects.push(x);
@@ -1531,7 +1743,7 @@ describe("Sinks", () => {
 
 		it("should support async consumers", async () => {
 
-			const sideEffects: number[]=[];
+			const sideEffects: number[] = [];
 
 			await items([1, 2, 3])(forEach(async x => {
 				await Promise.resolve();
@@ -1544,7 +1756,7 @@ describe("Sinks", () => {
 
 		it("should handle empty stream", async () => {
 
-			const sideEffects: number[]=[];
+			const sideEffects: number[] = [];
 
 			await items([] as number[])(forEach(x => {
 				sideEffects.push(x);
