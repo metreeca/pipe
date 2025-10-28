@@ -44,6 +44,7 @@ npm install @metreeca/pipe
 import { range, items, merge } from '@metreeca/pipe';
 
 items(42);                  // from single values
+items(1, 2, 3, 4, 5);       // from multiple scalar values
 items([1, 2, 3, 4, 5]);     // from arrays
 items(new Set([1, 2, 3]));  // from iterables
 items(asyncGenerator());    // from async iterables

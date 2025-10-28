@@ -329,6 +329,68 @@ describe("Feeds", () => {
 
 		});
 
+		describe("should accept multiple scalar values", () => {
+
+			it("should create pipe from variadic number arguments", async () => {
+
+				const result = await items(1, 2, 3, 4)(toArray());
+
+				expect(result).toEqual([1, 2, 3, 4]);
+
+			});
+
+			it("should create pipe from variadic string arguments", async () => {
+
+				const result = await items("a", "b", "c")(toArray());
+
+				expect(result).toEqual(["a", "b", "c"]);
+
+			});
+
+			it("should create pipe from variadic mixed arguments", async () => {
+
+				const result = await items<number | string>(1, "a", 2, "b")(toArray());
+
+				expect(result).toEqual([1, "a", 2, "b"]);
+
+			});
+
+			it("should filter undefined from variadic arguments", async () => {
+
+				const result = await items<number | undefined>(1, undefined, 2, undefined, 3)(toArray());
+
+				expect(result).toEqual([1, 2, 3]);
+
+			});
+
+			it("should preserve falsy values in variadic arguments", async () => {
+
+				const result = await items<number | boolean | string | null | undefined>(
+					0, false, "", null, undefined
+				)(toArray());
+
+				expect(result).toEqual([0, false, "", null]);
+
+			});
+
+			it("should work with single scalar argument", async () => {
+
+				const result = await items(42)(toArray());
+
+				expect(result).toEqual([42]);
+
+			});
+
+			it("should maintain backward compatibility with array argument", async () => {
+
+				const result = await items([1, 2, 3])(toArray());
+
+				expect(result).toEqual([1, 2, 3]);
+
+			});
+
+		});
+
 	});
 
 	describe("merge()", () => {

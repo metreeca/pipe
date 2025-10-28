@@ -235,9 +235,12 @@ export function pipe(source: unknown): unknown {
 /**
  * Creates a pipe from an item feed.
  *
- * This is the central point where `undefined` filtering occurs (see module documentation).
- * All `undefined` values are automatically removed from the stream, while other falsy values
- * (`null`, `0`, `false`, `""`) are preserved.
+ * Data sources are handled as follows:
+ *
+ * - **Primitives** (strings, numbers, booleans, null): Treated as atomic values and yielded as single items
+ * - **Arrays/Iterables** (excluding strings): Items are yielded individually
+ * - **Async Iterables/Pipes**: Items are yielded as they become available
+ * - **Other values** (objects, etc.): Yielded as single items
  *
  * @group Feeds
  *
@@ -246,24 +249,26 @@ export function pipe(source: unknown): unknown {
  * @param feed The source to create a pipe from
  *
  * @returns A pipe for fluent composition
- *
- * @remarks
- *
- * **Data Source Handling**:
- *
- * - **Primitives** (strings, numbers, booleans, null): Treated as atomic values and yielded as single items
- * - **Arrays/Iterables** (excluding strings): Items are yielded individually
- * - **Async Iterables/Pipes**: Items are yielded as they become available
- * - **Other values** (objects, etc.): Yielded as single items
- *
- * **When creating custom feeds**, always wrap async iterables with `items()` to ensure
- * `undefined` filtering and proper pipe interface integration. Directly returning raw
- * async iterables bypasses the filtering mechanism.
  */
-export function items<V>(feed: Data<V>): Pipe<V> {
+export function items<V>(feed: Data<V>): Pipe<V>;
+
+/**
+ * Creates a pipe from multiple scalar values.
+ *
+ * @group Feeds
+ *
+ * @typeParam V The type of items in the stream
+ *
+ * @param values The scalar values to create a pipe from
+ *
+ * @returns A pipe for fluent composition
+ */
+export function items<V>(...values: readonly [V, V, ...V[]]): Pipe<V>;
+
+export function items<V>(feed: Data<V>, ...values: V[]): Pipe<V> {
 
 	const generator = async function* () {
-		for await (const item of flatten(feed)) {
+		for await (const item of flatten(values.length > 0 ? [feed, ...values] as V[] : feed)) {
 			if ( item !== undefined ) {
 				yield item;
 			}
