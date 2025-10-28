@@ -98,10 +98,16 @@ Process items concurrently with the `parallel` option in `map()` and `flatMap()`
 import { flatMap, items, map, pipe, toArray } from "@metreeca/pipe";
 
 
-await pipe( // mapping with auto-detected concurrency
+await pipe( // mapping with auto-detected concurrency (CPU cores)
   (items([1, 2, 3]))
   (map(async x => x*2, { parallel: true }))
   (toArray())
+);
+
+await pipe( // mapping with unbounded concurrency (I/O-heavy tasks)
+	(items(urls))
+	(map(async url => fetch(url), { parallel: 0 }))
+	(toArray())
 );
 
 await pipe( // flat-mapping with explicit limit

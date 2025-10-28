@@ -84,7 +84,11 @@ import { cpus } from "os";
 
 
 /**
- * Number of CPU cores available for parallelize processing.
+ * Number of CPU cores available for parallel processing.
+ *
+ * Used as the default concurrency level when `parallel: true` is specified.
+ * Optimal for CPU-bound tasks. For I/O-heavy tasks, consider using `parallel: 0`
+ * for unbounded concurrency instead.
  *
  * Defaults to 4 if CPU detection fails (cpus() returns empty array).
  *
@@ -564,8 +568,9 @@ export function distinct<V, K>(selector?: (item: V) => K | Promise<K>): Task<V> 
  * @typeParam R The type of mapped result values
  *
  * @param mapper The function to transform each item (can be sync or async)
- * @param parallel Concurrency control: `false`/`undefined`/number ≤ 1 for sequential (default),
- *   `true` for parallel with auto-detected concurrency, or a number > 1 for explicit concurrency limit
+ * @param parallel Concurrency control: `false`/`undefined`/`1` for sequential (default),
+ *   `true` for parallel with auto-detected concurrency (CPU cores), `0` for unbounded concurrency (I/O-heavy tasks),
+ *   or a number > 1 for explicit concurrency limit
  *
  * @returns A task that transforms items using the mapper function
  *
@@ -578,7 +583,8 @@ export function distinct<V, K>(selector?: (item: V) => K | Promise<K>): Task<V> 
  *
  * ```typescript
  * map((n: number) => n * 2)                                             // sequential
- * map(async (id: string) => fetch(`/users/${id}`), { parallel: true })  // parallel
+ * map(async (id: string) => fetch(`/users/${id}`), { parallel: true })  // parallel (CPU cores)
+ * map(async (url: string) => fetch(url), { parallel: 0 })               // unbounded (I/O-heavy)
  * map(heavyOperation, { parallel: 4 })                                  // parallel with limit
  * ```
  */
@@ -587,12 +593,16 @@ export function map<V, R>(
 	{ parallel }: { parallel?: boolean | number } = {}
 ): Task<V, R> {
 
-	if ( parallel === true || isNumber(parallel) && parallel > 1 ) {
+	if ( parallel === true || isNumber(parallel) && parallel !== 1 ) {
+
+		const concurrency = parallel === true ? cores
+			: parallel === 0 ? Infinity
+				: parallel;
 
 		return source => parallelize(
 			source,
 			item => Promise.resolve(mapper(item)),
-			isNumber(parallel) ? parallel : cores,
+			concurrency,
 			async function* (result) { yield result; }
 		);
 
@@ -620,8 +630,9 @@ export function map<V, R>(
  * @typeParam R The type of output items after flattening
  *
  * @param mapper The function to transform each item into a data source (can be sync or async)
- * @param parallel Concurrency control: `false`/`undefined`/number ≤ 1 for sequential (default),
- *   `true` for parallel with auto-detected concurrency, or a number > 1 for explicit concurrency limit
+ * @param parallel Concurrency control: `false`/`undefined`/`1` for sequential (default),
+ *   `true` for parallel with auto-detected concurrency (CPU cores), `0` for unbounded concurrency (I/O-heavy tasks),
+ *   or a number > 1 for explicit concurrency limit
  *
  * @returns A task that transforms and flattens items
  *
@@ -642,12 +653,16 @@ export function flatMap<V, R>(
 	{ parallel }: { parallel?: boolean | number } = {}
 ): Task<V, R> {
 
-	if ( parallel === true || isNumber(parallel) && parallel > 1 ) {
+	if ( parallel === true || isNumber(parallel) && parallel !== 1 ) {
+
+		const concurrency = parallel === true ? cores
+			: parallel === 0 ? Infinity
+				: parallel;
 
 		return source => parallelize(
 			source,
 			item => Promise.resolve(mapper(item)),
-			isNumber(parallel) ? parallel : cores,
+			concurrency,
 			flatten
 		);
 

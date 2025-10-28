@@ -878,6 +878,27 @@ describe("Tasks", () => {
 
 		});
 
+		it("should handle unbounded concurrency (parallel: 0)", async () => {
+
+			let concurrent = 0;
+			let maxConcurrent = 0;
+
+			const values = await items([1, 2, 3, 4, 5, 6, 7, 8])(map(async x => {
+				concurrent++;
+				maxConcurrent = Math.max(maxConcurrent, concurrent);
+
+				await new Promise(resolve => setTimeout(resolve, 20));
+
+				concurrent--;
+				return x*2;
+			}, { parallel: 0 }))(toArray());
+
+			expect([...values].sort((a: number, b: number) => a-b)).toEqual([2, 4, 6, 8, 10, 12, 14, 16]);
+			// With unbounded concurrency, all items should be processed simultaneously
+			expect(maxConcurrent).toBe(8);
+
+		});
+
 	});
 
 	describe("parallel flatMap()", () => {
@@ -995,6 +1016,27 @@ describe("Tasks", () => {
 					};
 				}, { parallel: true }))(toArray());
 			}).rejects.toThrow("Flatten error");
+
+		});
+
+		it("should handle unbounded concurrency (parallel: 0)", async () => {
+
+			let concurrent = 0;
+			let maxConcurrent = 0;
+
+			const values = await items([1, 2, 3, 4, 5, 6])(flatMap(async x => {
+				concurrent++;
+				maxConcurrent = Math.max(maxConcurrent, concurrent);
+
+				await new Promise(resolve => setTimeout(resolve, 20));
+
+				concurrent--;
+				return [x, x*2];
+			}, { parallel: 0 }))(toArray());
+
+			expect([...values].sort((a: number, b: number) => a-b)).toEqual([1, 2, 2, 3, 4, 4, 5, 6, 6, 8, 10, 12]);
+			// With unbounded concurrency, all items should be processed simultaneously
+			expect(maxConcurrent).toBe(6);
 
 		});
 
