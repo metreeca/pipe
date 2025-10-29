@@ -1016,6 +1016,63 @@ describe("Tasks", () => {
 
 		});
 
+		it("should terminate infinite generator after n items", async () => {
+
+			let generatorCalls = 0;
+			let iteratorReturned = false;
+
+			// Create an infinite generator that tracks cleanup
+			const infiniteGenerator = items((async function* () {
+				try {
+					let i = 0;
+					while (true) {
+						generatorCalls++;
+						yield i++;
+					}
+				} finally {
+					iteratorReturned = true;
+				}
+			})());
+
+			const values = await infiniteGenerator(take(5))(toArray());
+
+			expect(values).toEqual([0, 1, 2, 3, 4]);
+			expect(generatorCalls).toBe(6); // Called 6 times: yields 0-4, then one more call before return
+			expect(iteratorReturned).toBe(true); // Generator was properly cleaned up
+
+		});
+
+		it("should backsignal through intermediate tasks", async () => {
+
+			let generatorCalls = 0;
+			let iteratorReturned = false;
+
+			// Create an infinite generator that tracks cleanup
+			const infiniteGenerator = items((async function* () {
+				try {
+					let i = 0;
+					while (true) {
+						generatorCalls++;
+						yield i++;
+					}
+				} finally {
+					iteratorReturned = true;
+				}
+			})());
+
+			// Pipeline: infinite generator > filter (evens) > take(3)
+			const values = await infiniteGenerator
+				(filter(x => x % 2 === 0))
+				(take(3))
+				(toArray());
+
+			expect(values).toEqual([0, 2, 4]);
+			// Generator yields: 0(✓), 1(✗), 2(✓), 3(✗), 4(✓), 5(✗), 6(passes filter, triggers take return)
+			expect(generatorCalls).toBe(7); // 7 calls: take needs one more to detect count >= 3
+			expect(iteratorReturned).toBe(true); // Generator was properly cleaned up
+
+		});
+
 	});
 
 	describe("peek()", () => {
@@ -1632,6 +1689,31 @@ describe("Sinks", () => {
 
 		});
 
+		it("should terminate infinite generator when match found", async () => {
+
+			let generatorCalls = 0;
+			let iteratorReturned = false;
+
+			const infiniteGenerator = items((async function* () {
+				try {
+					let i = 0;
+					while (true) {
+						generatorCalls++;
+						yield i++;
+					}
+				} finally {
+					iteratorReturned = true;
+				}
+			})());
+
+			const result = await infiniteGenerator(find(x => x === 3));
+
+			expect(result).toBe(3);
+			expect(generatorCalls).toBe(4); // Checked items 0, 1, 2, 3
+			expect(iteratorReturned).toBe(true); // Generator was properly cleaned up
+
+		});
+
 	});
 
 	describe("some()", () => {
@@ -1663,6 +1745,31 @@ describe("Sinks", () => {
 
 		});
 
+		it("should terminate infinite generator when match found", async () => {
+
+			let generatorCalls = 0;
+			let iteratorReturned = false;
+
+			const infiniteGenerator = items((async function* () {
+				try {
+					let i = 0;
+					while (true) {
+						generatorCalls++;
+						yield i++;
+					}
+				} finally {
+					iteratorReturned = true;
+				}
+			})());
+
+			const result = await infiniteGenerator(some(x => x > 5));
+
+			expect(result).toBe(true);
+			expect(generatorCalls).toBe(7); // Checked items 0-6 (6 is first > 5)
+			expect(iteratorReturned).toBe(true); // Generator was properly cleaned up
+
+		});
+
 	});
 
 	describe("every()", () => {
@@ -1691,6 +1798,31 @@ describe("Sinks", () => {
 			}));
 
 			expect(result).toBe(true);
+
+		});
+
+		it("should terminate infinite generator when predicate fails", async () => {
+
+			let generatorCalls = 0;
+			let iteratorReturned = false;
+
+			const infiniteGenerator = items((async function* () {
+				try {
+					let i = 0;
+					while (true) {
+						generatorCalls++;
+						yield i++;
+					}
+				} finally {
+					iteratorReturned = true;
+				}
+			})());
+
+			const result = await infiniteGenerator(every(x => x < 5));
+
+			expect(result).toBe(false);
+			expect(generatorCalls).toBe(6); // Checked items 0-5 (5 is first that fails x < 5)
+			expect(iteratorReturned).toBe(true); // Generator was properly cleaned up
 
 		});
 

@@ -518,6 +518,8 @@ export function take<V>(n: number): Task<V> {
 			if ( count < n ) {
 				yield item;
 				count++;
+			} else {
+				return;
 			}
 		}
 	};
