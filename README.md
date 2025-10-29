@@ -43,26 +43,22 @@ Create [feeds](https://metreeca.github.io/pipe/modules.html#Feeds) from various 
 ```typescript
 import { range, items, chain, merge, iterate } from '@metreeca/pipe';
 
-items(42);                  // from single values
-items(1, 2, 3, 4, 5);       // from multiple scalar values
-items([1, 2, 3, 4, 5]);     // from arrays
-items(new Set([1, 2, 3]));  // from iterables
-items(asyncGenerator());    // from async iterables
-items(pipe);                // from pipes
+items(42);                    // from single values
+items(1, 2, 3, 4, 5);         // from multiple scalar values
+items([1, 2, 3, 4, 5]);       // from arrays
+items(new Set([1, 2, 3]));    // from iterables
+items(asyncGenerator());      // from async iterables
+items(pipe);                  // from pipes
+range(10, 0);                 // from numeric ranges
 
-range(10, 0);               // from numeric ranges
+iterate(() => Math.random()); // from repeated generator calls
 
-iterate(() => {             // from repeated generator calls
-	let count = 0;
-	return count < 3 ? count++ : undefined;
-});
-
-chain(                      // sequential consumption
+chain(                        // sequential consumption
 	items([1, 2, 3]),
 	items([4, 5, 6])
 );
 
-merge(                      // concurrent consumption
+merge(                        // concurrent consumption
 	items([1, 2, 3]),
 	items([4, 5, 6])
 );
@@ -170,6 +166,22 @@ const iterable = pipe(
 for await (const value of iterable) {
 	console.log(value);  // 2, 3
 }
+```
+
+## Working with Infinite Feeds
+
+Use `iterate()` to create infinite feeds from generator functions. Tasks and sinks handle infinite feeds gracefully,
+processing values lazily until a limiting operator (like `take()`) or terminal sink stops consumption.
+
+```typescript
+import { pipe, iterate, filter, take, forEach } from '@metreeca/pipe';
+
+pipe(
+	(iterate(() => Math.random()))
+	(filter(v => v > 0.5))
+	(take(3))
+	(forEach(console.info))
+);
 ```
 
 ## Creating Custom Tasks
