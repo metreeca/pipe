@@ -102,6 +102,7 @@ const cores = cpus().length || 4;
  *
  * Represents various data formats that can be converted into async streams:
  *
+ * - `undefined` - filtered out and not yielded
  * - Single value: `V` - yields one item
  * - Array: `readonly V[]` - yields items from the array
  * - Synchronous iterable: `Iterable<V>` - yields items from the iterable
@@ -116,6 +117,9 @@ const cores = cpus().length || 4;
  * internally normalizing it to async iterables for uniform processing.
  * Used by {@link items} to create pipes and by {@link flatMap} to flatten nested data sources.
  *
+ * **`undefined` Handling**: `undefined` values are automatically filtered out by the {@link items} function,
+ * allowing tasks like {@link map} to return `undefined` as a way to filter items from the stream.
+ *
  * @example
  *
  * ```typescript
@@ -127,7 +131,12 @@ const cores = cpus().length || 4;
  * const pipeData: Data<number> = items([1, 2, 3]);
  * ```
  */
-export type Data<V> = V | readonly V[] | Iterable<V> | AsyncIterable<V> | Pipe<V>
+export type Data<V> =
+	| undefined | V
+	| readonly (undefined | V)[]
+	| Iterable<undefined | V>
+	| AsyncIterable<undefined | V>
+	| Pipe<V>
 
 /**
  * Fluent interface for composing async stream operations.
@@ -176,7 +185,7 @@ export interface Pipe<V> {
  */
 export interface Task<V, R = V> {
 
-	(value: AsyncIterable<V>): AsyncIterable<R>;
+	(value: AsyncIterable<V>): AsyncIterable<undefined | R>;
 
 }
 
@@ -234,9 +243,10 @@ export function pipe(source: unknown): unknown {
  *
  * Data sources are handled as follows:
  *
+ * - `undefined` - filtered out and not yielded
  * - **Primitives** (strings, numbers, booleans, null): Treated as atomic values and yielded as single items
- * - **Arrays/Iterables** (excluding strings): Items are yielded individually
- * - **Async Iterables/Pipes**: Items are yielded as they become available
+ * - **Arrays/Iterables** (excluding strings): Items are yielded individually (with `undefined` items filtered out)
+ * - **Async Iterables/Pipes**: Items are yielded as they become available (with `undefined` items filtered out)
  * - **Promises**: Awaited and then processed according to their resolved value
  * - **Other values** (objects, etc.): Yielded as single items
  *
@@ -620,7 +630,8 @@ export function distinct<V, K>(selector?: (item: V) => K | Promise<K>): Task<V> 
  * @typeParam V The type of input values
  * @typeParam R The type of mapped result values
  *
- * @param mapper The function to transform each item (can be sync or async)
+ * @param mapper The function to transform each item (can be sync or async). When the mapper returns `undefined`,
+ *   that value is filtered out and not included in the output stream.
  * @param parallel Concurrency control: `false`/`undefined`/`1` for sequential (default),
  *   `true` for parallel with auto-detected concurrency (CPU cores), `0` for unbounded concurrency (I/O-heavy tasks),
  *   or a number > 1 for explicit concurrency limit
@@ -642,7 +653,7 @@ export function distinct<V, K>(selector?: (item: V) => K | Promise<K>): Task<V> 
  * ```
  */
 export function map<V, R>(
-	mapper: (item: V) => R | Promise<R>,
+	mapper: (item: V) => undefined | R | Promise<undefined | R>,
 	{ parallel }: { parallel?: boolean | number } = {}
 ): Task<V, R> {
 
@@ -679,6 +690,7 @@ export function map<V, R>(
  *
  * Data sources returned by the mapper are handled as follows:
  *
+ * - `undefined` - filtered out and not included in the output stream
  * - **Primitives** (strings, numbers, booleans, null): Yielded as single atomic items
  * - **Arrays/Iterables** (excluding strings): Items are yielded individually from each mapper result
  * - **Async Iterables/Pipes**: Items are yielded as they become available
@@ -693,7 +705,8 @@ export function map<V, R>(
  * @typeParam V The type of input items
  * @typeParam R The type of output items after flattening
  *
- * @param mapper The function to transform each item into a data source
+ * @param mapper The function to transform each item into a data source. When the mapper returns `undefined`,
+ *   that value is filtered out and not included in the output stream.
  * @param parallel Concurrency control: `false`/`undefined`/`1` for sequential (default),
  *   `true` for parallel with auto-detected concurrency (CPU cores), `0` for unbounded concurrency (I/O-heavy tasks),
  *   or a number > 1 for explicit concurrency limit
@@ -1086,9 +1099,13 @@ export function toMap<V, K, R>(
  * iterated character by character, ensuring consistent behavior where they represent
  * single data items rather than character sequences.
  */
-async function* flatten<R>(data: Data<R>): AsyncGenerator<R, void, unknown> {
+async function* flatten<R>(data: Data<R>): AsyncGenerator<undefined | R, void, unknown> {
 
-	if ( isString(data) ) {
+	if ( data === undefined ) {
+
+		yield undefined;
+
+	} else if ( isString(data) ) {
 
 		yield data as R;
 
@@ -1096,11 +1113,11 @@ async function* flatten<R>(data: Data<R>): AsyncGenerator<R, void, unknown> {
 
 		yield* data();
 
-	} else if ( isAsyncIterable<R>(data) ) {
+	} else if ( isAsyncIterable<undefined | R>(data) ) {
 
 		yield* data;
 
-	} else if ( isIterable<R>(data) ) {
+	} else if ( isIterable<undefined | R>(data) ) {
 
 		yield* data;
 
