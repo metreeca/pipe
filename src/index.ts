@@ -848,14 +848,19 @@ export function count<V>(): Sink<V, number> {
  *
  * @param consumer The function to execute for each item (return value is ignored)
  *
- * @returns A sink that executes the consumer for each item
+ * @returns A sink that executes the consumer for each item and returns the number of processed items
  */
-export function forEach<V>(consumer: (item: V) => unknown): Sink<V, void> {
+export function forEach<V>(consumer: (item: V) => unknown): Sink<V, number> {
 	return async source => {
+
+		let count = 0;
 
 		for await (const item of source) {
 			await consumer(item);
+			count++;
 		}
+
+		return count;
 
 	};
 }

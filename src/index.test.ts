@@ -2046,11 +2046,12 @@ describe("Sinks", () => {
 
 			const sideEffects: number[] = [];
 
-			await items([1, 2, 3])(forEach(x => {
+			const count = await items([1, 2, 3])(forEach(x => {
 				sideEffects.push(x);
 			}));
 
 			expect(sideEffects).toEqual([1, 2, 3]);
+			expect(count).toBe(3);
 
 		});
 
@@ -2058,12 +2059,13 @@ describe("Sinks", () => {
 
 			const sideEffects: number[] = [];
 
-			await items([1, 2, 3])(forEach(async x => {
+			const count = await items([1, 2, 3])(forEach(async x => {
 				await Promise.resolve();
 				sideEffects.push(x*2);
 			}));
 
 			expect(sideEffects).toEqual([2, 4, 6]);
+			expect(count).toBe(3);
 
 		});
 
@@ -2071,11 +2073,12 @@ describe("Sinks", () => {
 
 			const sideEffects: number[] = [];
 
-			await items([] as number[])(forEach(x => {
+			const count = await items([] as number[])(forEach(x => {
 				sideEffects.push(x);
 			}));
 
 			expect(sideEffects).toEqual([]);
+			expect(count).toBe(0);
 
 		});
 
