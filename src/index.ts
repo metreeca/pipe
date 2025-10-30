@@ -132,11 +132,12 @@ const cores = cpus().length || 4;
  * ```
  */
 export type Data<V> =
-	| undefined | V
-	| readonly (undefined | V)[]
-	| Iterable<undefined | V>
-	| AsyncIterable<undefined | V>
-	| Pipe<V>
+	| V
+	| readonly V[]
+	| Iterable<V>
+	| AsyncIterable<V>
+	| Pipe<V>;
+
 
 /**
  * Fluent interface for composing async stream operations.
@@ -739,7 +740,7 @@ export function map<V, R>(
  * ```
  */
 export function flatMap<V, R>(
-	mapper: (item: V) => Data<R> | Promise<Data<R>>,
+	mapper: (item: V) => undefined | Data<R> | Promise<undefined | Data<R>>,
 	{ parallel }: { parallel?: boolean | number } = {}
 ): Task<V, R> {
 
@@ -1099,13 +1100,9 @@ export function toMap<V, K, R>(
  * iterated character by character, ensuring consistent behavior where they represent
  * single data items rather than character sequences.
  */
-async function* flatten<R>(data: Data<R>): AsyncGenerator<undefined | R, void, unknown> {
+async function* flatten<R>(data: Data<R>): AsyncGenerator<R, void, unknown> {
 
-	if ( data === undefined ) {
-
-		yield undefined;
-
-	} else if ( isString(data) ) {
+	if ( isString(data) ) {
 
 		yield data as R;
 
@@ -1113,7 +1110,7 @@ async function* flatten<R>(data: Data<R>): AsyncGenerator<undefined | R, void, u
 
 		yield* data();
 
-	} else if ( isAsyncIterable<undefined | R>(data) ) {
+	} else if ( isAsyncIterable<R>(data) ) {
 
 		yield* data;
 
