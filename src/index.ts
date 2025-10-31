@@ -390,26 +390,26 @@ export function iterate<V>(generator: () => undefined | Data<V> | Promise<undefi
 
 
 /**
- * Chains multiple pipes into a single stream, preserving source order.
+ * Chains multiple data sources into a single stream, preserving source order.
  *
- * Items are emitted in source order: all items from the first pipe,
- * then all items from the second pipe, and so on.
+ * Items are emitted in source order: all items from the first source,
+ * then all items from the second source, and so on.
  * Each source is fully consumed before moving to the next.
  *
  * @group Feeds
  *
  * @typeParam V The type of items in the streams
  *
- * @param sources The pipes to chain
+ * @param sources The data sources to chain (can be synchronous or asynchronous)
  *
  * @returns A pipe containing all items from all sources in order
  */
-export function chain<V>(...sources: readonly Pipe<V>[]): Pipe<V> {
+export function chain<V>(...sources: readonly (Data<V> | Promise<Data<V>>)[]): Pipe<V> {
 
 	return items((async function* () {
 
 		for (const source of sources) {
-			yield* source();
+			yield* flatten(await source);
 		}
 
 	})());
@@ -417,7 +417,7 @@ export function chain<V>(...sources: readonly Pipe<V>[]): Pipe<V> {
 }
 
 /**
- * Merges multiple pipes into a single stream, yielding items as they become available.
+ * Merges multiple data sources into a single stream, yielding items as they become available.
  *
  * Items are emitted in the order they resolve, not in source order.
  * All sources are consumed concurrently.
@@ -426,15 +426,17 @@ export function chain<V>(...sources: readonly Pipe<V>[]): Pipe<V> {
  *
  * @typeParam V The type of items in the streams
  *
- * @param sources The pipes to merge
+ * @param sources The data sources to merge (can be synchronous or asynchronous)
  *
  * @returns A pipe containing all items from all sources
  */
-export function merge<V>(...sources: readonly Pipe<V>[]): Pipe<V> {
+export function merge<V>(...sources: readonly (Data<V> | Promise<Data<V>>)[]): Pipe<V> {
 
 	return items((async function* () {
 
-		const iterators = sources.map(source => source()[Symbol.asyncIterator]());
+		const iterators = await Promise.all(
+			sources.map(async source => flatten(await source)[Symbol.asyncIterator]())
+		);
 
 		const pending = new Map(
 			iterators.map(iterator => {
