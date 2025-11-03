@@ -6,14 +6,11 @@
   "sort": [
     "source-order"
   ],
+  "sortEntryPoints": false,
   "categorizeByGroup": true,
   "groupOrder": [
     "Interfaces",
     "Type Aliases",
-    "Pipes",
-    "Feeds",
-    "Tasks",
-    "Sinks",
     "*"
   ],
   "useFirstParagraphOfCommentAsSummary": true,

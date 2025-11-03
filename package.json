@@ -24,7 +24,10 @@
   "type": "module",
   "sideEffects": false,
   "exports": {
-    ".": "./dist/index.js"
+    ".": "./dist/index.js",
+    "./feeds": "./dist/feeds.js",
+    "./tasks": "./dist/tasks.js",
+    "./sinks": "./dist/sinks.js"
   },
   "files": [
     "README.md",
