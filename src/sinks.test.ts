@@ -16,7 +16,7 @@
 
 import { describe, expect, it } from "vitest";
 import { items, range } from "./feeds";
-import { count, every, find, forEach, reduce, some, toArray, toMap, toSet } from "./sinks";
+import { count, every, find, forEach, reduce, some, toArray, toMap, toSet, toString } from "./sinks";
 import { filter, map } from "./tasks";
 
 
@@ -283,6 +283,7 @@ describe("forEach()", () => {
 	});
 
 });
+
 describe("reduce()", () => {
 
 	it("should reduce with initial value", async () => {
@@ -490,3 +491,111 @@ describe("toMap()", () => {
 
 });
 
+describe("toString()", () => {
+
+	it("should join items with comma separator by default", async () => {
+
+		const result = await items([1, 2, 3])(toString());
+
+		expect(result).toBe("1,2,3");
+
+	});
+
+	it("should join string items", async () => {
+
+		const result = await items(["a", "b", "c"])(toString());
+
+		expect(result).toBe("a,b,c");
+
+	});
+
+	it("should handle undefined separator as default", async () => {
+
+		const result = await items([1, 2, 3])(toString(undefined));
+
+		expect(result).toBe("1,2,3");
+
+	});
+
+	it("should handle custom separator", async () => {
+
+		const result = await items([1, 2, 3])(toString(" - "));
+
+		expect(result).toBe("1 - 2 - 3");
+
+	});
+
+	it("should handle empty separator", async () => {
+
+		const result = await items(["a", "b", "c"])(toString(""));
+
+		expect(result).toBe("abc");
+
+	});
+
+	it("should handle empty stream", async () => {
+
+		const result = await items([] as number[])(toString());
+
+		expect(result).toBe("");
+
+	});
+
+	it("should handle single item", async () => {
+
+		const result = await items([42])(toString());
+
+		expect(result).toBe("42");
+
+	});
+
+	it("should convert objects to strings", async () => {
+
+		const result = await items([{ id: 1 }, { id: 2 }])(toString("|"));
+
+		expect(result).toBe("[object Object]|[object Object]");
+
+	});
+
+	it("should handle null and undefined", async () => {
+
+		// Note: undefined values are automatically filtered out by items()
+		const result = await items([1, null, undefined, 2])(toString(","));
+
+		expect(result).toBe("1,,2");
+
+	});
+
+	it("should handle items after filtering", async () => {
+
+		const result = await items([1, 2, 3, 4, 5, 6])(filter(x => x%2 === 0))(toString("-"));
+
+		expect(result).toBe("2-4-6");
+
+	});
+
+	it("should handle items after mapping", async () => {
+
+		const result = await items([1, 2, 3])(map(x => x*10))(toString(" "));
+
+		expect(result).toBe("10 20 30");
+
+	});
+
+	it("should work with boolean values", async () => {
+
+		const result = await items([true, false, true])(toString(","));
+
+		expect(result).toBe("true,false,true");
+
+	});
+
+	it("should handle newline separator", async () => {
+
+		const result = await items(["line1", "line2", "line3"])(toString("\n"));
+
+		expect(result).toBe("line1\nline2\nline3");
+
+	});
+
+});
