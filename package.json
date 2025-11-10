@@ -27,7 +27,8 @@
     ".": "./dist/index.js",
     "./feeds": "./dist/feeds.js",
     "./tasks": "./dist/tasks.js",
-    "./sinks": "./dist/sinks.js"
+    "./sinks": "./dist/sinks.js",
+    "./async": "./dist/async/index.js"
   },
   "files": [
     "README.md",

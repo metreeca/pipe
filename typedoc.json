@@ -7,12 +7,6 @@
     "source-order"
   ],
   "sortEntryPoints": false,
-  "categorizeByGroup": true,
-  "groupOrder": [
-    "Interfaces",
-    "Type Aliases",
-    "*"
-  ],
   "useFirstParagraphOfCommentAsSummary": true,
   "favicon": "https://metreeca.com/assets/icon.ico",
   "sourceLinkExternal": true,

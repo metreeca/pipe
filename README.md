@@ -12,7 +12,7 @@ minimal boilerplate. Key features include:
 - **Natural syntax** › Readable pipeline composition: `items(data)(filter())(map())(toArray())`
 - **Minimal boilerplate** › Automatic `undefined` filtering and seamless type inference across pipeline stages
 - **Task/Sink pattern** › Clear separation between transformations and terminal operations
-- **Parallel processing** › Built-in `{ parallel: true }` option for concurrent execution
+- **Parallel processing** › Built-in support for concurrent task execution
 - **Extensible design** › Easy creation of custom feeds, tasks, and sinks
 
 # Installation
@@ -241,6 +241,28 @@ await repeat(42, 3)(toArray());  // [42, 42, 42]
 > When creating custom feeds, always wrap async generators, async generator functions, or `AsyncIterable<T>` objects
 > with [`items()`](https://metreeca.github.io/pipe/functions/items.html) to ensure `undefined` filtering and proper
 > pipe interface integration.
+
+## Async Utilities
+
+The library includes [async utilities](https://metreeca.github.io/pipe/modules/async.html) for managing asynchronous
+operations; for instance, `Throttle().queue()` can be used in functional mode to control pipeline execution rate:
+
+```typescript
+import { items } from '@metreeca/pipe/feeds';
+import { map } from '@metreeca/pipe/tasks';
+import { forEach } from '@metreeca/pipe/sinks';
+import { Throttle } from '@metreeca/pipe/async';
+import { pipe } from '@metreeca/pipe';
+
+const throttle = Throttle({ minimum: 1000 });  // limit to max 1 request per second
+
+await pipe(
+	(items([1, 2, 3, 4, 5]))
+	(map(throttle.queue))  // inject delays to enforce rate limit
+		(map(async x => fetch(`/api/items/${x}`)))
+		(forEach(console.log))
+);
+```
 
 # Support
 
