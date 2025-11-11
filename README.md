@@ -9,7 +9,7 @@ tasks, and sinks. The composable design enables building complex data processing
 minimal boilerplate. Key features include:
 
 - **Focused API** › Small set of operators covering common async iterable use cases
-- **Natural syntax** › Readable pipeline composition: `items(data)(filter())(map())(toArray())`
+- **Natural syntax** › Readable pipeline composition: `pipe(items(data)(filter())(map())(toArray()))`
 - **Minimal boilerplate** › Automatic `undefined` filtering and seamless type inference across pipeline stages
 - **Task/Sink pattern** › Clear separation between transformations and terminal operations
 - **Parallel processing** › Built-in support for concurrent task execution
@@ -27,6 +27,8 @@ npm install @metreeca/flow
 > The legacy `"node"` resolver is not supported.
 
 # Usage
+
+For the complete API reference, see [TypeDoc](https://metreeca.github.io/flow/).
 
 ## Core Concepts
 
