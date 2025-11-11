@@ -1,14 +1,14 @@
 ---
 name: "Bug Report"
 about: "Create a report to help us improve"
-title: "What's wrong with @metreeca/pipe?"
+title: "What's wrong with @metreeca/flow?"
 labels: "Issue"
 assignees: ""
 ---
 
 **environment**
 
-- @metreeca/pipe: *version*
+- @metreeca/flow: *version*
 - typescript: *version*
 - node.js: *version*
 - operating system: *name/version*

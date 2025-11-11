@@ -1,14 +1,14 @@
 {
-  "name": "@metreeca/pipe",
+  "name": "@metreeca/flow",
   "version": "0.9.12",
   "description": "A lightweight TypeScript library for composable async iterable processing.\n",
   "keywords": [
     "typescript",
     "utilities"
   ],
-  "homepage": "https://metreeca.github.io/pipe/",
+  "homepage": "https://metreeca.github.io/flow/",
   "bugs": {
-    "url": "https://github.com/metreeca/pipe/issues",
+    "url": "https://github.com/metreeca/flow/issues",
     "email": "info@metreeca.com"
   },
   "license": "Apache-2.0",
@@ -19,7 +19,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/metreeca/pipe.git"
+    "url": "git+https://github.com/metreeca/flow.git"
   },
   "type": "module",
   "sideEffects": false,
@@ -41,7 +41,7 @@
   "scripts": {
     "clean": "rm -rf dist docs node_modules",
     "setup": "npm install && npm audit fix",
-    "build": "rm -rf dist docs && tsc && typedoc",
+    "build": "rm -rf dist docs && npx tsc && npx typedoc",
     "check": "npx vitest run",
     "watch": "npx typedoc && (npx typedoc --watch & npx five-server docs --open)"
   },
