@@ -28,7 +28,7 @@ npm install @metreeca/flow
 
 # Usage
 
-For the complete API reference, see [TypeDoc](https://metreeca.github.io/flow/).
+For the complete API reference, see [TypeDocs](https://metreeca.github.io/flow/).
 
 ## Core Concepts
 

@@ -140,11 +140,12 @@ export function peek<V>(consumer: (item: V) => unknown): Task<V> {
  *
  * @typeParam V The type of items in the stream
  *
- * @param predicate The function to test each item
+ * @param predicate The function to test each item. When the predicate returns `undefined`,
+ *   it is treated as `false` and the item is filtered out.
  *
  * @returns A task that filters items based on the predicate
  */
-export function filter<V>(predicate: (item: V) => boolean | Promise<boolean>): Task<V> {
+export function filter<V>(predicate: (item: V) => undefined | boolean | Promise<undefined | boolean>): Task<V> {
 	return async function* (source: AsyncIterable<V>) {
 		for await (const item of source) {
 			if ( await predicate(item) ) {

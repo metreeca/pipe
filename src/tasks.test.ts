@@ -208,6 +208,25 @@ describe("filter()", () => {
 
 	});
 
+	it("should treat undefined as false", async () => {
+
+		const values = await items([1, 2, 3, 4, 5])(filter(x => x > 3 ? true : undefined))(toArray());
+
+		expect(values).toEqual([4, 5]);
+
+	});
+
+	it("should handle async predicates returning undefined", async () => {
+
+		const values = await items([1, 2, 3, 4, 5])(filter(async x => {
+			await Promise.resolve();
+			return x%2 === 0 ? true : undefined;
+		}))(toArray());
+
+		expect(values).toEqual([2, 4]);
+
+	});
+
 });
 
 describe("distinct()", () => {
