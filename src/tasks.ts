@@ -36,7 +36,7 @@
  * @module
  */
 
-import { isNumber } from "@metreeca/core";
+import { isFunction, isNumber } from "@metreeca/core";
 import { cpus } from "os";
 import { Data, Task } from "./index";
 import { flatten } from "./utils";
@@ -189,6 +189,112 @@ export function distinct<V, K>(selector?: (item: V) => K | Promise<K>): Task<V> 
 		}
 
 	};
+}
+
+/**
+ * Creates a task sorting items in the stream.
+ *
+ * All items are collected into memory before sorting, then yielded in sorted order.
+ *
+ * @typeParam V The type of items in the stream
+ * @typeParam K The type of sort key
+ *
+ * @param by Optional function to extract sort key from items
+ * @param as Optional sort order or comparison function.
+ *   - `"asc"` or `"ascending"`: ascending order (default)
+ *   - `"desc"` or `"descending"`: descending order
+ *   - Function: custom comparator returning negative for a < b, zero for a = b, positive for a > b
+ *
+ * @returns A task that sorts items
+ *
+ * @remarks
+ *
+ * **Default Sort Behavior:**
+ *
+ * - Numbers: sorted numerically in ascending order
+ * - Strings: sorted lexicographically (dictionary order)
+ * - Dates: sorted chronologically
+ * - Booleans: false before true
+ * - Mixed types: behavior depends on JavaScript's comparison operators
+ *
+ * **Generic Objects:**
+ *
+ * For objects without natural ordering (plain objects, custom classes), you must provide
+ * either `by` to extract a comparable key, or `as` for a comparison function.
+ *
+ * **Memory Usage:**
+ *
+ * Accumulates all stream items in memory before sorting. For large or infinite streams,
+ * this may cause memory issues or never complete.
+ *
+ * @example
+ *
+ * ```typescript
+ * // Sort numbers (natural ascending order)
+ * await items([3, 1, 2])(sort())(toArray());  // [1, 2, 3]
+ *
+ * // Descending order (compact form)
+ * await items([3, 1, 2])(sort({ as: "desc" }))(toArray());  // [3, 2, 1]
+ *
+ * // Descending order (extended form)
+ * await items([3, 1, 2])(sort({ as: "descending" }))(toArray());  // [3, 2, 1]
+ *
+ * // Sort by extracted key
+ * await items([{age: 30}, {age: 20}])(sort({ by: x => x.age }))(toArray());
+ * // [{age: 20}, {age: 30}]
+ *
+ * // Sort by key in descending order
+ * await items([{age: 20}, {age: 30}])(sort({ by: x => x.age, as: "desc" }))(toArray());
+ * // [{age: 30}, {age: 20}]
+ *
+ * // Custom comparator for locale-aware sorting
+ * await items(["Émile", "Alice"])(sort({ as: (a, b) => a.localeCompare(b) }))(toArray());
+ *
+ * // Combine key extraction with custom comparator
+ * await items(people)(sort({
+ *   by: p => p.name,
+ *   as: (a, b) => a.length - b.length
+ * }))(toArray());
+ * ```
+ */
+export function sort<V, K = V>({ by, as }: {
+	by?: (item: V) => K | Promise<K>;
+	as?: "asc" | "desc" | "ascending" | "descending" | ((a: K, b: K) => number);
+} = {}): Task<V> {
+
+	return async function* (source: AsyncIterable<V>) {
+
+		// collect all items with their sort keys
+
+		const entries: Array<{ item: V; key: K }> = [];
+
+		for await (const item of source) {
+			entries.push({
+				item,
+				key: (by ? await by(item) : item) as K
+			});
+		}
+
+		// define comparison function
+
+		const compare =
+			as === "asc" || as === "ascending" ? ascending
+				: as === "desc" || as === "descending" ? descending
+					: isFunction(as) ? (a: { key: K }, b: { key: K }) => as(a.key, b.key)
+						: ascending;
+
+
+		function ascending({ key: a }: { key: K }, { key: b }: { key: K }) { return a < b ? -1 : a > b ? 1 : 0; }
+
+		function descending({ key: a }: { key: K }, { key: b }: { key: K }) { return a < b ? 1 : a > b ? -1 : 0; }
+
+
+		// yield sorted items
+
+		yield* entries.sort(compare).map(({ item }) => item);
+
+	};
+
 }
 
 /**
@@ -514,9 +620,6 @@ async function* parallelize<V, R, T>(
 			}
 
 			// Stage 2: Process completed mappings and consumptions
-
-			type MappedEvent = { type: "mapped"; id: number; mapped: R };
-			type ConsumedEvent = { type: "consumed"; id: number; consumed: IteratorResult<T> };
 
 			// Only include unsettled promises in the race to avoid processing the same
 			// promise multiple times when it wins consecutive races

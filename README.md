@@ -77,7 +77,7 @@ Chain [tasks](https://metreeca.github.io/flow/modules/tasks.html) to transform, 
 
 ```typescript
 import { items } from '@metreeca/flow/feeds';
-import { map, filter, take, distinct, batch } from '@metreeca/flow/tasks';
+import { map, filter, take, distinct, sort, batch } from '@metreeca/flow/tasks';
 import { toArray } from '@metreeca/flow/sinks';
 import { pipe } from '@metreeca/flow';
 
@@ -94,6 +94,18 @@ await pipe(
 	(distinct())
 	(toArray())
 );  // [1, 2, 3]
+
+await pipe(
+	(items([3, 1, 4, 1, 5]))
+	(sort())
+	(toArray())
+);  // [1, 1, 3, 4, 5]
+
+await pipe(
+	(items([{ name: "Alice", age: 30 }, { name: "Bob", age: 25 }]))
+	(sort({ by: x => x.age }))
+	(toArray())
+);  // [{ name: "Bob", age: 25 }, { name: "Alice", age: 30 }]
 
 await pipe(
 	(items([1, 2, 3, 4, 5]))
