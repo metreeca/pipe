@@ -235,8 +235,9 @@ export function distinct<V, K>(selector?: (item: V) => K | Promise<K>): Task<V> 
  * @typeParam V The type of items in the stream
  * @typeParam K The type of sort key
  *
- * @param by Optional function to extract sort key from items
- * @param as Optional sort order or comparison function.
+ * @param options Configuration options
+ * @param options.by Optional function to extract sort key from items
+ * @param options.as Optional sort order or comparison function.
  *   - `"asc"` or `"ascending"`: ascending order (default)
  *   - `"desc"` or `"descending"`: descending order
  *   - Function: custom comparator returning negative for a < b, zero for a = b, positive for a > b
@@ -252,6 +253,12 @@ export function distinct<V, K>(selector?: (item: V) => K | Promise<K>): Task<V> 
  * - Dates: sorted chronologically
  * - Booleans: false before true
  * - Mixed types: behavior depends on JavaScript's comparison operators
+ *
+ * **Undefined and Null Handling:**
+ *
+ * When sort keys are `undefined` or `null`, they are always placed at the beginning
+ * of the sorted output, regardless of sort order (ascending or descending).
+ * This ensures deterministic sorting when items have missing or null values.
  *
  * **Generic Objects:**
  *
@@ -291,6 +298,10 @@ export function distinct<V, K>(selector?: (item: V) => K | Promise<K>): Task<V> 
  *   by: p => p.name,
  *   as: (a, b) => a.length - b.length
  * }))(toArray());
+ *
+ * // Undefined/null values are placed at the beginning
+ * await items([{x: 2}, {x: undefined}, {x: 1}, {x: null}])(sort({ by: i => i.x }))(toArray());
+ * // [{x: undefined}, {x: null}, {x: 1}, {x: 2}]
  * ```
  */
 export function sort<V, K = V>({ by, as }: {
@@ -320,9 +331,22 @@ export function sort<V, K = V>({ by, as }: {
 						: ascending;
 
 
-		function ascending({ key: a }: { key: K }, { key: b }: { key: K }) { return a < b ? -1 : a > b ? 1 : 0; }
+		function ascending({ key: a }: { key: K }, { key: b }: { key: K }) {
+			return (a === undefined || a === null) && (b === undefined || b === null) ? 0
+				: a === undefined || a === null ? -1
+					: b === undefined || b === null ? 1
+						: a < b ? -1
+							: a > b ? 1
+								: 0;
+		}
 
-		function descending({ key: a }: { key: K }, { key: b }: { key: K }) { return a < b ? 1 : a > b ? -1 : 0; }
+		function descending({ key: a }: { key: K }, { key: b }: { key: K }) {
+			return (a === undefined || a === null) && (b === undefined || b === null) ? 0
+				: a === undefined || a === null ? -1 : b === undefined || b === null ? 1
+					: a < b ? 1
+						: a > b ? -1
+							: 0;
+		}
 
 
 		// yield sorted items
