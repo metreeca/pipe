@@ -25,7 +25,7 @@
  * @module
  */
 
-import { Sink } from "./index";
+import { Sink } from ".";
 
 /**
  * Creates a sink checking if any item satisfies the predicate.
@@ -35,6 +35,13 @@ import { Sink } from "./index";
  * @param predicate The function to test each item
  *
  * @returns A sink that checks if any item satisfies the predicate
+ *
+ * @example
+ *
+ * ```typescript
+ * await items([1, 2, 3, 4, 5])(some(x => x > 3));  // true
+ * await items([1, 2, 3])(some(x => x > 5));  // false
+ * ```
  */
 export function some<V>(predicate: (item: V) => boolean | Promise<boolean>): Sink<V, boolean> {
 	return async source => {
@@ -57,6 +64,13 @@ export function some<V>(predicate: (item: V) => boolean | Promise<boolean>): Sin
  * @param predicate The function to test each item
  *
  * @returns A sink that checks if all items satisfy the predicate
+ *
+ * @example
+ *
+ * ```typescript
+ * await items([2, 4, 6, 8])(every(x => x%2 === 0));  // true
+ * await items([2, 3, 4])(every(x => x%2 === 0));  // false
+ * ```
  */
 export function every<V>(predicate: (item: V) => boolean | Promise<boolean>): Sink<V, boolean> {
 	return async source => {
@@ -77,6 +91,13 @@ export function every<V>(predicate: (item: V) => boolean | Promise<boolean>): Si
  * @typeParam V The type of items in the stream
  *
  * @returns A sink that counts all items in the stream
+ *
+ * @example
+ *
+ * ```typescript
+ * await items([1, 2, 3, 4, 5])(count());  // 5
+ * await items([])(count());  // 0
+ * ```
  */
 export function count<V>(): Sink<V, number> {
 	return async source => {
@@ -100,6 +121,13 @@ export function count<V>(): Sink<V, number> {
  * @param predicate The function to test each item
  *
  * @returns A sink that retrieves the first matching item or undefined
+ *
+ * @example
+ *
+ * ```typescript
+ * await items([1, 2, 3, 4, 5])(find(x => x > 3));  // 4
+ * await items([1, 2, 3])(find(x => x > 5));  // undefined
+ * ```
  */
 export function find<V>(predicate: (item: V) => boolean | Promise<boolean>): Sink<V, undefined | V> {
 	return async source => {
@@ -124,6 +152,12 @@ export function find<V>(predicate: (item: V) => boolean | Promise<boolean>): Sin
  * @param consumer The function to execute for each item (return value is ignored)
  *
  * @returns A sink that executes the consumer for each item and returns the number of processed items
+ *
+ * @example
+ *
+ * ```typescript
+ * await items([1, 2, 3])(forEach(x => console.log(x)));  // logs 1, 2, 3; returns 3
+ * ```
  */
 export function forEach<V>(consumer: (item: V) => unknown): Sink<V, number> {
 	return async source => {
@@ -150,6 +184,14 @@ export function forEach<V>(consumer: (item: V) => unknown): Sink<V, number> {
  *
  * @returns A sink that reduces the stream to a single value, the first item for singleton streams,
  * or `undefined` for empty streams
+ *
+ * @example
+ *
+ * ```typescript
+ * await items([1, 2, 3, 4, 5])(reduce((acc, x) => acc + x));  // 15
+ * await items([42])(reduce((acc, x) => acc + x));  // 42
+ * await items([])(reduce((acc, x) => acc + x));  // undefined
+ * ```
  */
 export function reduce<V>(reducer: (accumulator: V, item: V) => V | Promise<V>): Sink<V, undefined | V>;
 
@@ -163,6 +205,14 @@ export function reduce<V>(reducer: (accumulator: V, item: V) => V | Promise<V>):
  * @param initial The initial value for the accumulator
  *
  * @returns A sink that reduces the stream to a single value
+ *
+ * @example
+ *
+ * ```typescript
+ * await items([1, 2, 3, 4, 5])(reduce((acc, x) => acc + x, 0));  // 15
+ * await items([1, 2, 3, 4, 5])(reduce((acc, x) => acc + x, 10));  // 25
+ * await items([])(reduce((acc, x) => acc + x, 0));  // 0
+ * ```
  */
 export function reduce<V, R>(reducer: (accumulator: R, item: V) => R | Promise<R>, initial: R): Sink<V, R>;
 
@@ -193,6 +243,13 @@ export function reduce<V, R>(reducer: Function, initial?: R): Sink<V, undefined 
  * @typeParam V The type of items in the stream
  *
  * @returns A sink that collects all items into an array
+ *
+ * @example
+ *
+ * ```typescript
+ * await items([1, 2, 3])(toArray());  // [1, 2, 3]
+ * await items(new Set([1, 2, 3]))(toArray());  // [1, 2, 3]
+ * ```
  */
 export function toArray<V>(): Sink<V, readonly V[]> {
 	return async source => {
@@ -213,6 +270,13 @@ export function toArray<V>(): Sink<V, readonly V[]> {
  * @typeParam V The type of items in the stream
  *
  * @returns A sink that collects all unique items into a set
+ *
+ * @example
+ *
+ * ```typescript
+ * await items([1, 2, 2, 3, 3, 3])(toSet());  // Set(3) { 1, 2, 3 }
+ * await items([1, 2, 3])(toSet());  // Set(3) { 1, 2, 3 }
+ * ```
  */
 export function toSet<V>(): Sink<V, ReadonlySet<V>> {
 	return async source => {
@@ -236,6 +300,13 @@ export function toSet<V>(): Sink<V, ReadonlySet<V>> {
  * @param key The function to extract the key from each item
  *
  * @returns A sink that collects items into a map with keys from the key selector and items as values
+ *
+ * @example
+ *
+ * ```typescript
+ * await items([{ id: 1, name: "Alice" }, { id: 2, name: "Bob" }])(toMap(x => x.id));
+ * // Map(2) { 1 => { id: 1, name: "Alice" }, 2 => { id: 2, name: "Bob" } }
+ * ```
  */
 export function toMap<V, K>(
 	key: (item: V) => K | Promise<K>
@@ -251,6 +322,13 @@ export function toMap<V, K>(
  * @param value The function to transform each item into a map value
  *
  * @returns A sink that collects items into a map with keys and values from the selectors
+ *
+ * @example
+ *
+ * ```typescript
+ * await items([{ id: 1, name: "Alice" }, { id: 2, name: "Bob" }])(toMap(x => x.id, x => x.name));
+ * // Map(2) { 1 => "Alice", 2 => "Bob" }
+ * ```
  */
 
 export function toMap<V, K, R>(
@@ -299,6 +377,14 @@ export function toMap<V, K, R>(
  * >
  * > Unlike `Array.prototype.join()`, `undefined` values are automatically filtered out
  * > by the stream pipeline before reaching this sink, so they will not appear in the output.
+ *
+ * @example
+ *
+ * ```typescript
+ * await items([1, 2, 3])(toString());  // "1,2,3"
+ * await items([1, 2, 3])(toString(" - "));  // "1 - 2 - 3"
+ * await items(["a", "b", "c"])(toString());  // "a,b,c"
+ * ```
  */
 export function toString<V>(separator: string = ","): Sink<V, string> {
 	return async source => {

@@ -42,7 +42,7 @@
  */
 
 import { isPromise } from "@metreeca/core";
-import { Data, Pipe, Sink, Task } from "./index";
+import { Data, Pipe, Sink, Task } from ".";
 import { flatten } from "./utils";
 
 /**
@@ -122,6 +122,14 @@ export function items<V>(feed: Data<V> | Promise<Data<V>>, ...values: V[]): Pipe
  * @param end The ending value (exclusive)
  *
  * @returns A pipe yielding numbers from start to end
+ *
+ * @example
+ *
+ * ```typescript
+ * await range(1, 5)(toArray());   // [1, 2, 3, 4]
+ * await range(5, 1)(toArray());   // [5, 4, 3, 2]
+ * await range(3, 3)(toArray());   // []
+ * ```
  */
 export function range(start: number, end: number): Pipe<number> {
 
@@ -160,6 +168,17 @@ export function range(start: number, end: number): Pipe<number> {
  * @param generator The function to call repeatedly to generate data, returning `undefined` to terminate
  *
  * @returns A pipe yielding items from successive generator calls
+ *
+ * @example
+ *
+ * ```typescript
+ * // Infinite random numbers
+ * await iterate(() => Math.random())(take(3))(toArray());  // [0.123, 0.456, 0.789]
+ *
+ * // Counter that stops at 3
+ * let count = 0;
+ * await iterate(() => count++ < 3 ? count : undefined)(toArray());  // [1, 2, 3]
+ * ```
  */
 export function iterate<V>(generator: () => undefined | Data<V> | Promise<undefined | Data<V>>): Pipe<V> {
 
@@ -200,6 +219,12 @@ export function iterate<V>(generator: () => undefined | Data<V> | Promise<undefi
  * @param sources The data sources to chain (can be synchronous or asynchronous)
  *
  * @returns A pipe containing all items from all sources in order
+ *
+ * @example
+ *
+ * ```typescript
+ * await chain(items([1, 2]), items([3, 4]))(toArray());  // [1, 2, 3, 4]
+ * ```
  */
 export function chain<V>(...sources: readonly (Data<V> | Promise<Data<V>>)[]): Pipe<V> {
 
@@ -224,6 +249,13 @@ export function chain<V>(...sources: readonly (Data<V> | Promise<Data<V>>)[]): P
  * @param sources The data sources to merge (can be synchronous or asynchronous)
  *
  * @returns A pipe containing all items from all sources
+ *
+ * @example
+ *
+ * ```typescript
+ * // Order depends on async timing
+ * await merge(items([1, 2]), items([3, 4]))(toArray());  // e.g., [1, 3, 2, 4]
+ * ```
  */
 export function merge<V>(...sources: readonly (Data<V> | Promise<Data<V>>)[]): Pipe<V> {
 
@@ -272,5 +304,3 @@ export function merge<V>(...sources: readonly (Data<V> | Promise<Data<V>>)[]): P
 	})());
 
 }
-
-

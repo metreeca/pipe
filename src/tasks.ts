@@ -38,7 +38,7 @@
 
 import { isFunction, isNumber } from "@metreeca/core";
 import { cpus } from "os";
-import { Data, Task } from "./index";
+import { Data, Task } from ".";
 import { flatten } from "./utils";
 
 
@@ -69,6 +69,12 @@ const cores = cpus().length || 4;
  * @param n The number of items to skip (negative values treated as zero)
  *
  * @returns A task that skips the first n items
+ *
+ * @example
+ *
+ * ```typescript
+ * await items([1, 2, 3, 4, 5])(skip(2))(toArray());  // [3, 4, 5]
+ * ```
  */
 export function skip<V>(n: number): Task<V> {
 	return async function* (source: AsyncIterable<V>) {
@@ -95,6 +101,12 @@ export function skip<V>(n: number): Task<V> {
  * @param n The maximum number of items to take (negative values treated as zero)
  *
  * @returns A task that takes the first n items
+ *
+ * @example
+ *
+ * ```typescript
+ * await items([1, 2, 3, 4, 5])(take(3))(toArray());  // [1, 2, 3]
+ * ```
  */
 export function take<V>(n: number): Task<V> {
 	return async function* (source: AsyncIterable<V>) {
@@ -123,6 +135,14 @@ export function take<V>(n: number): Task<V> {
  * @param consumer The function to execute for each item (return value is ignored)
  *
  * @returns A task that executes the consumer for each item
+ *
+ * @example
+ *
+ * ```typescript
+ * await items([1, 2, 3])(peek(x => console.log(x)))(toArray());
+ * // Logs: 1, 2, 3
+ * // Returns: [1, 2, 3]
+ * ```
  */
 export function peek<V>(consumer: (item: V) => unknown): Task<V> {
 	return async function* (source: AsyncIterable<V>) {
@@ -144,6 +164,12 @@ export function peek<V>(consumer: (item: V) => unknown): Task<V> {
  *   it is treated as `false` and the item is filtered out.
  *
  * @returns A task that filters items based on the predicate
+ *
+ * @example
+ *
+ * ```typescript
+ * await items([1, 2, 3, 4, 5])(filter(x => x % 2 === 0))(toArray());  // [2, 4]
+ * ```
  */
 export function filter<V>(predicate: (item: V) => undefined | boolean | Promise<undefined | boolean>): Task<V> {
 	return async function* (source: AsyncIterable<V>) {
@@ -172,6 +198,16 @@ export function filter<V>(predicate: (item: V) => undefined | boolean | Promise<
  *
  * Maintains a `Set` of all seen items in memory. For large or infinite streams
  * with many unique items, this may cause memory issues.
+ *
+ * @example
+ *
+ * ```typescript
+ * await items([1, 2, 2, 3, 1])(distinct())(toArray());  // [1, 2, 3]
+ *
+ * // With selector
+ * await items([{id: 1}, {id: 2}, {id: 1}])(distinct(x => x.id))(toArray());
+ * // [{id: 1}, {id: 2}]
+ * ```
  */
 export function distinct<V, K>(selector?: (item: V) => K | Promise<K>): Task<V> {
 	return async function* (source: AsyncIterable<V>) {
@@ -463,6 +499,15 @@ export function flatMap<V, R>(
  * When size is 0 or negative, all stream items are accumulated in memory before
  * yielding a single batch. For large or infinite streams, this may cause
  * memory issues. Use a positive size for bounded memory consumption.
+ *
+ * @example
+ *
+ * ```typescript
+ * await items([1, 2, 3, 4, 5])(batch(2))(toArray());  // [[1, 2], [3, 4], [5]]
+ *
+ * // Collect all into single batch
+ * await items([1, 2, 3])(batch())(toArray());  // [[1, 2, 3]]
+ * ```
  */
 export function batch<V>(size: number = 0): Task<V, readonly V[]> {
 	return async function* (source: AsyncIterable<V>) {
@@ -524,6 +569,7 @@ async function* parallelize<V, R, T>(
 	const consumers = new Map<number, Consumer>();
 
 	// Track settled promises to prevent them from being included in subsequent Promise.race() calls
+
 	const settledMappers = new Set<number>();
 	const settledConsumers = new Set<number>();
 
@@ -596,6 +642,7 @@ async function* parallelize<V, R, T>(
 			yield result.value;
 		}
 	}
+
 
 	try {
 
@@ -692,4 +739,5 @@ async function* parallelize<V, R, T>(
 		);
 
 	}
+
 }
