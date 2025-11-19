@@ -21,16 +21,17 @@ minimal boilerplate. Key features include:
 npm install @metreeca/flow
 ```
 
-> [!WARNING]
+> [!_WARNING_]
 >
 > TypeScript consumers must use `"moduleResolution": "bundler"` (or `"node16"`/`"nodenext"`) in `tsconfig.json`.
 > The legacy `"node"` resolver is not supported.
 
-# Usage
+# Core Usage
 
-For the complete API reference, see [TypeDocs](https://metreeca.github.io/flow/).
-
-## Core Concepts
+> [!NOTE]
+>
+> This section introduces essential concepts and common patterns: see the
+> [API reference](https://metreeca.github.io/flow/) for complete coverage.
 
 **@metreeca/flow** provides four main abstractions:
 
@@ -118,55 +119,6 @@ await pipe(
 );  // [[1, 2], [3, 4], [5]]
 ```
 
-## Parallel Processing
-
-Process items concurrently with the `parallel` option in `map()` and `flatMap()` tasks.
-
-```typescript
-import { items } from '@metreeca/flow/feeds';
-import { flatMap, map } from '@metreeca/flow/tasks';
-import { toArray } from '@metreeca/flow/sinks';
-import { pipe } from '@metreeca/flow';
-
-await pipe( // mapping with auto-detected concurrency (CPU cores)
-	(items([1, 2, 3]))
-	(map(async x => x*2, { parallel: true }))
-	(toArray())
-);
-
-await pipe( // mapping with unbounded concurrency (I/O-heavy tasks)
-	(items(urls))
-	(map(async url => fetch(url), { parallel: 0 }))
-	(toArray())
-);
-
-await pipe( // flat-mapping with explicit limit
-	(items([1, 2, 3]))
-	(flatMap(async x => [x, x*2], { parallel: 2 }))
-  (toArray())
-);
-```
-
-Manage parallel execution flow with utilities from the @metreeca/core
-[async](https://metreeca.github.io/core/modules/async.html) module, such as throttling to control execution rate:
-
-```typescript
-import { Throttle } from "@metreeca/core/async";
-import { pipe } from "@metreeca/flow";
-import { items } from "@metreeca/flow/feeds";
-import { forEach } from "@metreeca/flow/sinks";
-import { map } from "@metreeca/flow/tasks";
-
-const throttle = Throttle({ minimum: 1000 });  // limit to max 1 request per second
-
-await pipe(
-	(items([1, 2, 3, 4, 5]))
-	(map(throttle.queue))  // inject delays to enforce rate limit
-		(map(async x => fetch(`/api/items/${x}`)))
-		(forEach(console.log))
-);
-```
-
 ## Consuming Data
 
 Apply [sinks](https://metreeca.github.io/flow/modules/sinks.html) as terminal operations that consume pipes and return
@@ -217,6 +169,57 @@ const iterable = pipe(
 for await (const value of iterable) {
 	console.log(value);  // 2, 3
 }
+```
+
+# Advanced Usage
+
+## Parallel Processing
+
+Process items concurrently with the `parallel` option in `map()` and `flatMap()` tasks.
+
+```typescript
+import { items } from '@metreeca/flow/feeds';
+import { flatMap, map } from '@metreeca/flow/tasks';
+import { toArray } from '@metreeca/flow/sinks';
+import { pipe } from '@metreeca/flow';
+
+await pipe( // mapping with auto-detected concurrency (CPU cores)
+	(items([1, 2, 3]))
+	(map(async x => x*2, { parallel: true }))
+	(toArray())
+);
+
+await pipe( // mapping with unbounded concurrency (I/O-heavy tasks)
+	(items(urls))
+	(map(async url => fetch(url), { parallel: 0 }))
+	(toArray())
+);
+
+await pipe( // flat-mapping with explicit limit
+	(items([1, 2, 3]))
+	(flatMap(async x => [x, x*2], { parallel: 2 }))
+  (toArray())
+);
+```
+
+Manage parallel execution flow with utilities from the @metreeca/core
+[async](https://metreeca.github.io/core/modules/async.html) module, such as throttling to control execution rate:
+
+```typescript
+import { Throttle } from "@metreeca/core/async";
+import { pipe } from "@metreeca/flow";
+import { items } from "@metreeca/flow/feeds";
+import { forEach } from "@metreeca/flow/sinks";
+import { map } from "@metreeca/flow/tasks";
+
+const throttle = Throttle({ minimum: 1000 });  // limit to max 1 request per second
+
+await pipe(
+	(items([1, 2, 3, 4, 5]))
+	(map(throttle.queue))  // inject delays to enforce rate limit
+		(map(async x => fetch(`/api/items/${x}`)))
+		(forEach(console.log))
+);
 ```
 
 ## Working with Infinite Feeds
