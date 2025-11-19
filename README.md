@@ -73,16 +73,16 @@ merge(                        // concurrent consumption
 
 ## Transforming Data
 
-Chain [tasks](https://metreeca.github.io/flow/modules/tasks.html) to transform, filter, and process items.
-The [sorts](https://metreeca.github.io/flow/modules/sorts.html)
-and [tests](https://metreeca.github.io/flow/modules/tests.html) modules provide helper functions for assembling complex
-sorting and filtering critaria.
+Chain [tasks](https://metreeca.github.io/flow/modules/tasks.html) to transform, filter, and process items. The
+@metreeca/core [comparators](https://metreeca.github.io/core/modules/comparators.html)
+and [predicates](https://metreeca.github.io/core/modules/predicates.html) modules provide helper functions for
+assembling complex sorting and filtering criteria.
 
 ```typescript
 import { pipe } from "@metreeca/flow";
 import { items } from "@metreeca/flow/feeds";
 import { toArray } from "@metreeca/flow/sinks";
-import { by } from "@metreeca/flow/sorts";
+import { by } from "@metreeca/core/comparators";
 import { batch, distinct, filter, map, sort, take } from "@metreeca/flow/tasks";
 
 await pipe(
@@ -144,6 +144,26 @@ await pipe( // flat-mapping with explicit limit
 	(items([1, 2, 3]))
 	(flatMap(async x => [x, x*2], { parallel: 2 }))
   (toArray())
+);
+```
+
+Manage parallel execution flow with utilities from the @metreeca/core
+[async](https://metreeca.github.io/core/modules/async.html) module, such as throttling to control execution rate:
+
+```typescript
+import { Throttle } from "@metreeca/core/async";
+import { pipe } from "@metreeca/flow";
+import { items } from "@metreeca/flow/feeds";
+import { forEach } from "@metreeca/flow/sinks";
+import { map } from "@metreeca/flow/tasks";
+
+const throttle = Throttle({ minimum: 1000 });  // limit to max 1 request per second
+
+await pipe(
+	(items([1, 2, 3, 4, 5]))
+	(map(throttle.queue))  // inject delays to enforce rate limit
+		(map(async x => fetch(`/api/items/${x}`)))
+		(forEach(console.log))
 );
 ```
 
@@ -259,86 +279,6 @@ await repeat(42, 3)(toArray());  // [42, 42, 42]
 > When creating custom feeds, always wrap async generators, async generator functions, or `AsyncIterable<T>` objects
 > with [`items()`](https://metreeca.github.io/flow/functions/items.html) to ensure `undefined` filtering and proper
 > pipe interface integration.
-
-## Async Utilities
-
-The library includes [async utilities](https://metreeca.github.io/flow/modules/async.html) for managing asynchronous
-operations; for instance, `Throttle().queue()` can be used in functional mode to control pipeline execution rate:
-
-```typescript
-import { items } from '@metreeca/flow/feeds';
-import { map } from '@metreeca/flow/tasks';
-import { forEach } from '@metreeca/flow/sinks';
-import { Throttle } from '@metreeca/flow/async';
-import { pipe } from '@metreeca/flow';
-
-const throttle = Throttle({ minimum: 1000 });  // limit to max 1 request per second
-
-await pipe(
-	(items([1, 2, 3, 4, 5]))
-	(map(throttle.queue))  // inject delays to enforce rate limit
-		(map(async x => fetch(`/api/items/${x}`)))
-		(forEach(console.log))
-);
-```
-
-## Sort Utilities
-
-The library includes [sort utilities](https://metreeca.github.io/flow/modules/sorts.html) for building and composing
-comparators; for instance, `by()` can be used to create comparators from property selectors:
-
-```typescript
-import { items } from '@metreeca/flow/feeds';
-import { sort } from '@metreeca/flow/tasks';
-import { toArray } from '@metreeca/flow/sinks';
-import { by, reverse, chain } from '@metreeca/flow/sorts';
-import { pipe } from '@metreeca/flow';
-
-type User = { name: string; age: number };
-
-const users: User[] = [
-	{ name: 'Alice', age: 30 },
-	{ name: 'Bob', age: 25 },
-	{ name: 'Charlie', age: 30 }
-];
-
-await pipe(
-	(items(users))
-	(sort(chain(
-		reverse(by(u => u.age)),     // sort by age descending first
-		by(u => u.name)              // then by name ascending
-	)))
-	(toArray())
-);
-// => [{ name: 'Alice', age: 30 }, { name: 'Charlie', age: 30 }, { name: 'Bob', age: 25 }]
-```
-
-## Test Utilities
-
-The library includes [test utilities](https://metreeca.github.io/flow/modules/tests.html) for building and composing
-predicates; for instance, `and()` and `or()` can be used to combine predicate functions:
-
-```typescript
-import { items } from '@metreeca/flow/feeds';
-import { filter } from '@metreeca/flow/tasks';
-import { toArray } from '@metreeca/flow/sinks';
-import { not, and, or } from '@metreeca/flow/tests';
-import { pipe } from '@metreeca/flow';
-
-const isEven = (x: number) => x%2 === 0;
-const isPositive = (x: number) => x > 0;
-const isLarge = (x: number) => x > 10;
-
-await pipe(
-	(items([-5, -2, 3, 8, 12, 15]))
-	(filter(and(
-		isPositive,
-		or(isEven, isLarge)
-	)))
-	(toArray())
-);
-// => [8, 12, 15]
-```
 
 # Support
 

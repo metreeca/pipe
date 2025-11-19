@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
+import { by, descending } from "@metreeca/core/comparators";
 import { describe, expect, it } from "vitest";
 import { pipe } from ".";
 import { items } from "./feeds";
 import { toArray } from "./sinks";
-import { by, descending } from "./sorts";
 import { batch, distinct, filter, flatMap, map, peek, skip, sort, take } from "./tasks";
 
 

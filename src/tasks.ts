@@ -37,9 +37,9 @@
  */
 
 import { isNumber } from "@metreeca/core";
+import { ascending } from "@metreeca/core/comparators";
 import { cpus } from "os";
 import { Data, Task } from ".";
-import { ascending } from "./sorts";
 import { flatten } from "./utils";
 
 
@@ -170,7 +170,9 @@ export function peek<V>(consumer: (item: V) => unknown): Task<V> {
  *
  * **Predicate Composition:**
  *
- * Use predicate utilities from the {@link "tests"} module to create complex filtering criteria.
+ * Use predicate utilities from the
+ * [@metreeca/core](https://metreeca.github.io/core/modules/predicates.html)
+ * predicates module to create complex filtering criteria.
  *
  * @example
  *
@@ -249,7 +251,9 @@ export function distinct<V, K>(selector?: (item: V) => K | Promise<K>): Task<V> 
  *
  * **Comparator Functions:**
  *
- * Use comparator utilities from the {@link "sorts"} module to create complex sorting criteria.
+ * Use comparator utilities from the
+ * [@metreeca/core](https://metreeca.github.io/core/modules/comparators.html)
+ * comparators module to create complex sorting criteria.
  *
  * **Default Behavior:**
  *
@@ -265,7 +269,7 @@ export function distinct<V, K>(selector?: (item: V) => K | Promise<K>): Task<V> 
  * @example
  *
  * ```typescript
- * import { ascending, descending, by, chain } from "./sorts.js";
+ * import { ascending, descending, by, chain } from "@metreeca/core/comparators";
  *
  * // Sort numbers (natural ascending order)
  * await items([3, 1, 2])(sort())(toArray());  // [1, 2, 3]

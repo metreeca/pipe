@@ -27,10 +27,7 @@
     ".": "./dist/index.js",
     "./feeds": "./dist/feeds.js",
     "./tasks": "./dist/tasks.js",
-    "./sinks": "./dist/sinks.js",
-    "./async": "./dist/async/index.js",
-    "./sorts": "./dist/sorts.js",
-    "./tests": "./dist/tests.js"
+    "./sinks": "./dist/sinks.js"
   },
   "files": [
     "README.md",
@@ -48,7 +45,7 @@
     "watch": "npx typedoc && (npx typedoc --watch & npx five-server docs --open)"
   },
   "dependencies": {
-    "@metreeca/core": "^0.9.0"
+    "@metreeca/core": "^0.9.8"
   },
   "devDependencies": {
     "five-server": "^0.4.4",
