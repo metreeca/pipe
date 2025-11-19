@@ -36,9 +36,10 @@
  * @module
  */
 
-import { isFunction, isNumber } from "@metreeca/core";
+import { isNumber } from "@metreeca/core";
 import { cpus } from "os";
 import { Data, Task } from ".";
+import { ascending } from "./sorts";
 import { flatten } from "./utils";
 
 
@@ -233,37 +234,22 @@ export function distinct<V, K>(selector?: (item: V) => K | Promise<K>): Task<V> 
  * All items are collected into memory before sorting, then yielded in sorted order.
  *
  * @typeParam V The type of items in the stream
- * @typeParam K The type of sort key
  *
- * @param options Configuration options
- * @param options.by Optional function to extract sort key from items
- * @param options.as Optional sort order or comparison function.
- *   - `"asc"` or `"ascending"`: ascending order (default)
- *   - `"desc"` or `"descending"`: descending order
- *   - Function: custom comparator returning negative for a < b, zero for a = b, positive for a > b
+ * @param comparator Comparison function (defaults to {@link ascending})
  *
  * @returns A task that sorts items
  *
  * @remarks
  *
- * **Default Sort Behavior:**
+ * **Comparator Functions:**
  *
- * - Numbers: sorted numerically in ascending order
- * - Strings: sorted lexicographically (dictionary order)
- * - Dates: sorted chronologically
- * - Booleans: false before true
- * - Mixed types: behavior depends on JavaScript's comparison operators
+ * Use comparator utilities from the [sorts module](../modules/sorts.html) to create complex sorting criteria.
  *
- * **Undefined and Null Handling:**
+ * **Default Behavior:**
  *
- * When sort keys are `undefined` or `null`, they are always placed at the beginning
- * of the sorted output, regardless of sort order (ascending or descending).
- * This ensures deterministic sorting when items have missing or null values.
- *
- * **Generic Objects:**
- *
- * For objects without natural ordering (plain objects, custom classes), you must provide
- * either `by` to extract a comparable key, or `as` for a comparison function.
+ * The default {@link ascending} comparator sorts values in natural order: numbers numerically,
+ * strings lexicographically, dates chronologically, and booleans with false before true.
+ * Null and undefined values are placed at the beginning.
  *
  * **Memory Usage:**
  *
@@ -273,89 +259,43 @@ export function distinct<V, K>(selector?: (item: V) => K | Promise<K>): Task<V> 
  * @example
  *
  * ```typescript
+ * import { ascending, descending, by, chain } from "./sorts.js";
+ *
  * // Sort numbers (natural ascending order)
  * await items([3, 1, 2])(sort())(toArray());  // [1, 2, 3]
  *
- * // Descending order (compact form)
- * await items([3, 1, 2])(sort({ as: "desc" }))(toArray());  // [3, 2, 1]
- *
- * // Descending order (extended form)
- * await items([3, 1, 2])(sort({ as: "descending" }))(toArray());  // [3, 2, 1]
+ * // Descending order
+ * await items([3, 1, 2])(sort(descending))(toArray());  // [3, 2, 1]
  *
  * // Sort by extracted key
- * await items([{age: 30}, {age: 20}])(sort({ by: x => x.age }))(toArray());
+ * await items([{age: 30}, {age: 20}])(sort(by(x => x.age)))(toArray());
  * // [{age: 20}, {age: 30}]
  *
  * // Sort by key in descending order
- * await items([{age: 20}, {age: 30}])(sort({ by: x => x.age, as: "desc" }))(toArray());
+ * await items([{age: 20}, {age: 30}])(sort(by(x => x.age, descending)))(toArray());
  * // [{age: 30}, {age: 20}]
  *
  * // Custom comparator for locale-aware sorting
- * await items(["Émile", "Alice"])(sort({ as: (a, b) => a.localeCompare(b) }))(toArray());
+ * await items(["Émile", "Alice"])(sort((a, b) => a.localeCompare(b)))(toArray());
  *
- * // Combine key extraction with custom comparator
- * await items(people)(sort({
- *   by: p => p.name,
- *   as: (a, b) => a.length - b.length
- * }))(toArray());
- *
- * // Undefined/null values are placed at the beginning
- * await items([{x: 2}, {x: undefined}, {x: 1}, {x: null}])(sort({ by: i => i.x }))(toArray());
- * // [{x: undefined}, {x: null}, {x: 1}, {x: 2}]
+ * // Sort by name length, then alphabetically
+ * await items(people)(sort(chain(
+ *   by(p => p.name.length),
+ *   by(p => p.name)
+ * )))(toArray());
  * ```
  */
-export function sort<V, K = V>({ by, as }: {
-	by?: (item: V) => K | Promise<K>;
-	as?: "asc" | "desc" | "ascending" | "descending" | ((a: K, b: K) => number);
-} = {}): Task<V> {
+export function sort<V>(comparator: (a: V, b: V) => number = ascending): Task<V> {
 
 	return async function* (source: AsyncIterable<V>) {
 
-		// collect all items with their sort keys
-
-		const entries: Array<{ item: V; key: K }> = [];
+		const items: V[] = [];
 
 		for await (const item of source) {
-			entries.push({
-				item,
-				key: (by ? await by(item) : item) as K
-			});
+			items.push(item);
 		}
 
-		// define comparison function
-
-		const compare =
-			as === "asc" || as === "ascending" ? key(ascending)
-				: as === "desc" || as === "descending" ? key(descending)
-					: isFunction(as) ? key(as)
-						: key(ascending);
-
-
-		function key(comparator: (a: K, b: K) => number) {
-			return ({ key: a }: { key: K }, { key: b }: { key: K }) => comparator(a, b);
-		}
-
-		function ascending<V>(a: V, b: V): number {
-			return (a === undefined || a === null) && (b === undefined || b === null) ? 0
-				: a === undefined || a === null ? -1
-					: b === undefined || b === null ? 1
-						: a < b ? -1
-							: a > b ? 1
-								: 0;
-		}
-
-		function descending<V>(a: V, b: V): number {
-			return (a === undefined || a === null) && (b === undefined || b === null) ? 0
-				: a === undefined || a === null ? -1
-					: b === undefined || b === null ? 1
-						: a < b ? 1
-							: a > b ? -1
-								: 0;
-		}
-
-		// yield sorted items
-
-		yield* entries.sort(compare).map(({ item }) => item);
+		yield* items.sort(comparator);
 
 	};
 

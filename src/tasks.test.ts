@@ -18,6 +18,7 @@ import { describe, expect, it } from "vitest";
 import { pipe } from ".";
 import { items } from "./feeds";
 import { toArray } from "./sinks";
+import { by, descending } from "./sorts";
 import { batch, distinct, filter, flatMap, map, peek, skip, sort, take } from "./tasks";
 
 
@@ -288,7 +289,7 @@ describe("sort()", () => {
 			{ id: 3, name: "c" },
 			{ id: 1, name: "a" },
 			{ id: 2, name: "b" }
-		])(sort({ by: item => item.id }))(toArray());
+		])(sort(by(item => item.id)))(toArray());
 
 		expect(values).toEqual([
 			{ id: 1, name: "a" },
@@ -298,18 +299,13 @@ describe("sort()", () => {
 
 	});
 
-	it("should support async selectors", async () => {
+	it("should support custom comparators", async () => {
 
 		const values = await items([
 			{ id: 3, name: "c" },
 			{ id: 1, name: "a" },
 			{ id: 2, name: "b" }
-		])(sort({
-			by: async item => {
-				await Promise.resolve();
-				return item.id;
-			}
-		}))(toArray());
+		])(sort((a, b) => a.id-b.id))(toArray());
 
 		expect(values).toEqual([
 			{ id: 1, name: "a" },
@@ -319,69 +315,29 @@ describe("sort()", () => {
 
 	});
 
-	it("should sort in descending order with 'desc'", async () => {
+	it("should sort in descending order", async () => {
 
-		const values = await items([1, 2, 3, 4, 5])(sort({ as: "desc" }))(toArray());
-
-		expect(values).toEqual([5, 4, 3, 2, 1]);
-
-	});
-
-	it("should sort in descending order with 'descending'", async () => {
-
-		const values = await items([1, 2, 3, 4, 5])(sort({ as: "descending" }))(toArray());
+		const values = await items([1, 2, 3, 4, 5])(sort(descending))(toArray());
 
 		expect(values).toEqual([5, 4, 3, 2, 1]);
-
-	});
-
-	it("should sort in ascending order with 'asc'", async () => {
-
-		const values = await items([3, 1, 4, 5, 2])(sort({ as: "asc" }))(toArray());
-
-		expect(values).toEqual([1, 2, 3, 4, 5]);
-
-	});
-
-	it("should sort in ascending order with 'ascending'", async () => {
-
-		const values = await items([3, 1, 4, 5, 2])(sort({ as: "ascending" }))(toArray());
-
-		expect(values).toEqual([1, 2, 3, 4, 5]);
 
 	});
 
 	it("should use custom comparator for descending order", async () => {
 
-		const values = await items([1, 2, 3, 4, 5])(sort({ as: (a, b) => b-a }))(toArray());
+		const values = await items([1, 2, 3, 4, 5])(sort((a, b) => b-a))(toArray());
 
 		expect(values).toEqual([5, 4, 3, 2, 1]);
 
 	});
 
-	it("should combine selector with 'desc' order", async () => {
+	it("should combine selector with descending order", async () => {
 
 		const values = await items([
 			{ age: 30, name: "Alice" },
 			{ age: 25, name: "Bob" },
 			{ age: 35, name: "Charlie" }
-		])(sort({ by: item => item.age, as: "desc" }))(toArray());
-
-		expect(values).toEqual([
-			{ age: 35, name: "Charlie" },
-			{ age: 30, name: "Alice" },
-			{ age: 25, name: "Bob" }
-		]);
-
-	});
-
-	it("should use comparator with selector", async () => {
-
-		const values = await items([
-			{ age: 30, name: "Alice" },
-			{ age: 25, name: "Bob" },
-			{ age: 35, name: "Charlie" }
-		])(sort({ by: item => item.age, as: (a, b) => b-a }))(toArray());
+		])(sort(by(item => item.age, descending)))(toArray());
 
 		expect(values).toEqual([
 			{ age: 35, name: "Charlie" },
@@ -448,7 +404,7 @@ describe("sort()", () => {
 			{ key: 1, value: "b" },
 			{ key: 2, value: "c" },
 			{ key: 1, value: "d" }
-		])(sort({ by: item => item.key }))(toArray());
+		])(sort(by(item => item.key)))(toArray());
 
 		// Items with same key should maintain relative order (stable sort)
 		expect(values).toEqual([
