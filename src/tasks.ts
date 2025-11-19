@@ -325,13 +325,17 @@ export function sort<V, K = V>({ by, as }: {
 		// define comparison function
 
 		const compare =
-			as === "asc" || as === "ascending" ? ascending
-				: as === "desc" || as === "descending" ? descending
-					: isFunction(as) ? (a: { key: K }, b: { key: K }) => as(a.key, b.key)
-						: ascending;
+			as === "asc" || as === "ascending" ? key(ascending)
+				: as === "desc" || as === "descending" ? key(descending)
+					: isFunction(as) ? key(as)
+						: key(ascending);
 
 
-		function ascending({ key: a }: { key: K }, { key: b }: { key: K }) {
+		function key(comparator: (a: K, b: K) => number) {
+			return ({ key: a }: { key: K }, { key: b }: { key: K }) => comparator(a, b);
+		}
+
+		function ascending<V>(a: V, b: V): number {
 			return (a === undefined || a === null) && (b === undefined || b === null) ? 0
 				: a === undefined || a === null ? -1
 					: b === undefined || b === null ? 1
@@ -340,14 +344,14 @@ export function sort<V, K = V>({ by, as }: {
 								: 0;
 		}
 
-		function descending({ key: a }: { key: K }, { key: b }: { key: K }) {
+		function descending<V>(a: V, b: V): number {
 			return (a === undefined || a === null) && (b === undefined || b === null) ? 0
-				: a === undefined || a === null ? -1 : b === undefined || b === null ? 1
-					: a < b ? 1
-						: a > b ? -1
-							: 0;
+				: a === undefined || a === null ? -1
+					: b === undefined || b === null ? 1
+						: a < b ? 1
+							: a > b ? -1
+								: 0;
 		}
-
 
 		// yield sorted items
 
