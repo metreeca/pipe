@@ -18,7 +18,7 @@
  * Comparator functions and combinators for sorting operations.
  *
  * Provides a composable API for creating and combining comparison functions
- * used with array sorting methods like `Array.sort()`.
+ * used with sorting tasks and array sorting methods like `Array.sort()`.
  *
  * @module
  *

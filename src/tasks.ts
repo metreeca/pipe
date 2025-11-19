@@ -166,6 +166,12 @@ export function peek<V>(consumer: (item: V) => unknown): Task<V> {
  *
  * @returns A task that filters items based on the predicate
  *
+ * @remarks
+ *
+ * **Predicate Composition:**
+ *
+ * Use predicate utilities from the {@link "tests"} module to create complex filtering criteria.
+ *
  * @example
  *
  * ```typescript
@@ -243,7 +249,7 @@ export function distinct<V, K>(selector?: (item: V) => K | Promise<K>): Task<V> 
  *
  * **Comparator Functions:**
  *
- * Use comparator utilities from the [sorts module](../modules/sorts.html) to create complex sorting criteria.
+ * Use comparator utilities from the {@link "sorts"} module to create complex sorting criteria.
  *
  * **Default Behavior:**
  *

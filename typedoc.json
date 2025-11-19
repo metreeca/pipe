@@ -7,6 +7,12 @@
     "source-order"
   ],
   "sortEntryPoints": false,
+  "groupOrder": [
+    "Comparators",
+    "Factories",
+    "Combinators",
+    "*"
+  ],
   "useFirstParagraphOfCommentAsSummary": true,
   "favicon": "https://metreeca.com/assets/icon.ico",
   "sourceLinkExternal": true,

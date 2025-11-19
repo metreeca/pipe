@@ -74,12 +74,15 @@ merge(                        // concurrent consumption
 ## Transforming Data
 
 Chain [tasks](https://metreeca.github.io/flow/modules/tasks.html) to transform, filter, and process items.
+Use [sorts](https://metreeca.github.io/flow/modules/sorts.html) for comparators
+and [tests](https://metreeca.github.io/flow/modules/tests.html) for predicates.
 
 ```typescript
-import { items } from '@metreeca/flow/feeds';
-import { map, filter, take, distinct, sort, batch } from '@metreeca/flow/tasks';
-import { toArray } from '@metreeca/flow/sinks';
-import { pipe } from '@metreeca/flow';
+import { pipe } from "@metreeca/flow";
+import { items } from "@metreeca/flow/feeds";
+import { toArray } from "@metreeca/flow/sinks";
+import { by } from "@metreeca/flow/sorts";
+import { batch, distinct, filter, map, sort, take } from "@metreeca/flow/tasks";
 
 await pipe(
 	(items([1, 2, 3, 4, 5]))
@@ -103,7 +106,7 @@ await pipe(
 
 await pipe(
 	(items([{ name: "Alice", age: 30 }, { name: "Bob", age: 25 }]))
-	(sort({ by: x => x.age }))
+  (sort(by(x => x.age)))
 	(toArray())
 );  // [{ name: "Bob", age: 25 }, { name: "Alice", age: 30 }]
 
