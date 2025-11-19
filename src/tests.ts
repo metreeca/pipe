@@ -18,7 +18,7 @@
  * Predicate composition utilities.
  *
  * Provides functional utilities for composing and transforming predicate functions
- * used with filtering tasks and other predicate-based operations.
+ * used with {@link filter | filtering tasks} and other predicate-based operations.
  *
  * @module tests
  */

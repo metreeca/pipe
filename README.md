@@ -74,8 +74,9 @@ merge(                        // concurrent consumption
 ## Transforming Data
 
 Chain [tasks](https://metreeca.github.io/flow/modules/tasks.html) to transform, filter, and process items.
-Use [sorts](https://metreeca.github.io/flow/modules/sorts.html) for comparators
-and [tests](https://metreeca.github.io/flow/modules/tests.html) for predicates.
+The [sorts](https://metreeca.github.io/flow/modules/sorts.html)
+and [tests](https://metreeca.github.io/flow/modules/tests.html) modules provide helper functions for assembling complex
+sorting and filtering critaria.
 
 ```typescript
 import { pipe } from "@metreeca/flow";
@@ -279,6 +280,64 @@ await pipe(
 		(map(async x => fetch(`/api/items/${x}`)))
 		(forEach(console.log))
 );
+```
+
+## Sort Utilities
+
+The library includes [sort utilities](https://metreeca.github.io/flow/modules/sorts.html) for building and composing
+comparators; for instance, `by()` can be used to create comparators from property selectors:
+
+```typescript
+import { items } from '@metreeca/flow/feeds';
+import { sort } from '@metreeca/flow/tasks';
+import { toArray } from '@metreeca/flow/sinks';
+import { by, reverse, chain } from '@metreeca/flow/sorts';
+import { pipe } from '@metreeca/flow';
+
+type User = { name: string; age: number };
+
+const users: User[] = [
+	{ name: 'Alice', age: 30 },
+	{ name: 'Bob', age: 25 },
+	{ name: 'Charlie', age: 30 }
+];
+
+await pipe(
+	(items(users))
+	(sort(chain(
+		reverse(by(u => u.age)),     // sort by age descending first
+		by(u => u.name)              // then by name ascending
+	)))
+	(toArray())
+);
+// => [{ name: 'Alice', age: 30 }, { name: 'Charlie', age: 30 }, { name: 'Bob', age: 25 }]
+```
+
+## Test Utilities
+
+The library includes [test utilities](https://metreeca.github.io/flow/modules/tests.html) for building and composing
+predicates; for instance, `and()` and `or()` can be used to combine predicate functions:
+
+```typescript
+import { items } from '@metreeca/flow/feeds';
+import { filter } from '@metreeca/flow/tasks';
+import { toArray } from '@metreeca/flow/sinks';
+import { not, and, or } from '@metreeca/flow/tests';
+import { pipe } from '@metreeca/flow';
+
+const isEven = (x: number) => x%2 === 0;
+const isPositive = (x: number) => x > 0;
+const isLarge = (x: number) => x > 10;
+
+await pipe(
+	(items([-5, -2, 3, 8, 12, 15]))
+	(filter(and(
+		isPositive,
+		or(isEven, isLarge)
+	)))
+	(toArray())
+);
+// => [8, 12, 15]
 ```
 
 # Support
