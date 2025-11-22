@@ -45,7 +45,7 @@
     "watch": "npx typedoc && (npx typedoc --watch & npx five-server docs --open)"
   },
   "dependencies": {
-    "@metreeca/core": "^0.9.10"
+    "@metreeca/core": "^0.9.11"
   },
   "devDependencies": {
     "five-server": "^0.4.5",
