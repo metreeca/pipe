@@ -25,7 +25,7 @@
  * @module
  */
 
-import { Sink } from ".";
+import { Sink } from "./index.js";
 
 /**
  * Creates a sink checking if any item satisfies the predicate.

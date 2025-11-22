@@ -42,8 +42,8 @@
  */
 
 import { isPromise } from "@metreeca/core";
-import { Data, Pipe, Sink, Task } from ".";
-import { flatten } from "./utils";
+import { Data, Pipe, Sink, Task } from "./index.js";
+import { flatten } from "./utils.js";
 
 /**
  * Creates a pipe from a data source.

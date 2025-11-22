@@ -22,7 +22,7 @@
  */
 
 import { isAsyncIterable, isFunction, isIterable, isString } from "@metreeca/core";
-import { Data } from "./index";
+import { Data } from "./index.js";
 
 /**
  * Helper to flatten Data<R> into individual items.

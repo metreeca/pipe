@@ -15,9 +15,9 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { items, range } from "./feeds";
-import { count, every, find, forEach, reduce, some, toArray, toMap, toSet, toString } from "./sinks";
-import { filter, map } from "./tasks";
+import { items, range } from "./feeds.js";
+import { count, every, find, forEach, reduce, some, toArray, toMap, toSet, toString } from "./sinks.js";
+import { filter, map } from "./tasks.js";
 
 
 describe("some()", () => {

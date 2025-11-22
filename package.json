@@ -1,7 +1,7 @@
 {
   "name": "@metreeca/pipe",
   "version": "0.9.19",
-  "description": "A lightweight TypeScript library for composable async iterable processing.\n",
+  "description": "A lightweight TypeScript library for composable async iterable processing.",
   "keywords": [
     "typescript",
     "utilities"
@@ -45,13 +45,13 @@
     "watch": "npx typedoc && (npx typedoc --watch & npx five-server docs --open)"
   },
   "dependencies": {
-    "@metreeca/core": "^0.9.8"
+    "@metreeca/core": "^0.9.10"
   },
   "devDependencies": {
-    "five-server": "^0.4.4",
+    "five-server": "^0.4.5",
     "typedoc": "^0.28.14",
     "typedoc-github-theme": "^0.3.1",
-    "typescript": "^5.9.2",
-    "vitest": "^3.2.4"
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.13"
   }
 }

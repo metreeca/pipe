@@ -15,10 +15,10 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { Pipe, pipe } from ".";
-import { chain, items, iterate, merge, range } from "./feeds";
-import { reduce, toArray } from "./sinks";
-import { filter, map } from "./tasks";
+import { chain, items, iterate, merge, range } from "./feeds.js";
+import { Pipe, pipe } from "./index.js";
+import { reduce, toArray } from "./sinks.js";
+import { filter, map } from "./tasks.js";
 
 
 describe("items()", () => {
@@ -1191,4 +1191,3 @@ describe("merge()", () => {
 	});
 
 });
-

@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-import { by, descending } from "@metreeca/core/comparators";
+import { by, descending } from "@metreeca/core/order";
 import { describe, expect, it } from "vitest";
-import { pipe } from ".";
-import { items } from "./feeds";
-import { toArray } from "./sinks";
-import { batch, distinct, filter, flatMap, map, peek, skip, sort, take } from "./tasks";
+import { items } from "./feeds.js";
+import { pipe } from "./index.js";
+import { toArray } from "./sinks.js";
+import { batch, distinct, filter, flatMap, map, peek, skip, sort, take } from "./tasks.js";
 
 
 describe("skip()", () => {
