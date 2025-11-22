@@ -21,7 +21,7 @@ minimal boilerplate. Key features include:
 npm install @metreeca/pipe
 ```
 
-> [!_WARNING_]
+> [!WARNING]
 >
 > TypeScript consumers must use `"moduleResolution": "bundler"` (or `"node16"`/`"nodenext"`) in `tsconfig.json`.
 > The legacy `"node"` resolver is not supported.
