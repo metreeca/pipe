@@ -22,7 +22,7 @@
  * **Custom Tasks** are functions that transform async iterables by returning async generator functions:
  *
  * ```typescript
- * import { items, toArray, type Task } from '@metreeca/flow';
+ * import { items, toArray, type Task } from '@metreeca/pipe';
  *
  * function double<V extends number>(): Task<V, V> {
  *   return async function* (source) {

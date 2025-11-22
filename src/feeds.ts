@@ -22,7 +22,7 @@
  * **Custom Feeds** are functions that create new pipes:
  *
  * ```typescript
- * import { items, toArray, type Pipe } from '@metreeca/flow';
+ * import { items, toArray, type Pipe } from '@metreeca/pipe';
  *
  * function repeat<V>(value: V, count: number): Pipe<V> {
  *   return items(async function* () {

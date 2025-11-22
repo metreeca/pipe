@@ -1,6 +1,6 @@
 ---
 title: Project Guidelines
-description: Development guidelines and conventions for the @metreeca/flow package.
+description: Development guidelines and conventions for the @metreeca/pipe package.
 ---
 
 # NPM Scripts
