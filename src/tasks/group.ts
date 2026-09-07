@@ -58,7 +58,9 @@ import { items } from "../feeds/items.js";
  * );  // [[1, [{ id: 1 }, { id: 1 }]], [2, [{ id: 2 }]]]
  * ```
  */
-export function group<V, K extends Primitive>(key: (item: V) => Awaitable<K>): Task<V, readonly [K, readonly V[]]> {
+export function group<V, K extends Primitive>(
+	key: (item: NoInfer<V>) => Awaitable<K>
+): Task<V, readonly [K, readonly V[]]> {
 
 	return source => items((async function* () {
 

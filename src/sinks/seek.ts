@@ -41,7 +41,7 @@ import { Sink } from "../index.js";
  *
  * @returns A sink resolving to the first item matching `predicate`
  *
- * @throws {Error} If no item matches `predicate`
+ * @throws {@link !Error Error} If no item matches `predicate`
  *
  * @example
  *
@@ -57,7 +57,7 @@ import { Sink } from "../index.js";
  * );  // 1
  * ```
  */
-export function seek<V>(predicate: (item: V) => Awaitable<boolean> = () => true): Sink<V, V> {
+export function seek<V>(predicate: (item: NoInfer<V>) => Awaitable<boolean> = () => true): Sink<V, V> {
 
 	return async source => {
 

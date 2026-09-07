@@ -56,7 +56,7 @@ const readonly = () => { throw new TypeError("unsupported mutation of immutable 
  * @returns A sink resolving to the deeply {@link immutable} read-only map pairing each extracted key with the item it
  *   was extracted from
  *
- * @throws {Error} If two items yield the same key
+ * @throws {@link !Error Error} If two items yield the same key
  *
  * @example
  *
@@ -68,7 +68,7 @@ const readonly = () => { throw new TypeError("unsupported mutation of immutable 
  * ```
  */
 export function toMap<V, K>(
-	key: (item: V) => Awaitable<K>
+	key: (item: NoInfer<V>) => Awaitable<K>
 ): Sink<V, ReadonlyMap<K, V>>;
 
 /**
@@ -87,7 +87,7 @@ export function toMap<V, K>(
  * @returns A sink resolving to the deeply {@link immutable} read-only map pairing each extracted key with the value
  *   extracted alongside it
  *
- * @throws {Error} If two items yield the same key
+ * @throws {@link !Error Error} If two items yield the same key
  *
  * @example
  *
@@ -99,8 +99,8 @@ export function toMap<V, K>(
  * ```
  */
 export function toMap<V, K, T>(
-	key: (item: V) => Awaitable<K>,
-	value: (item: V) => Awaitable<T>
+	key: (item: NoInfer<V>) => Awaitable<K>,
+	value: (item: NoInfer<V>) => Awaitable<T>
 ): Sink<V, ReadonlyMap<K, T>>;
 
 /**

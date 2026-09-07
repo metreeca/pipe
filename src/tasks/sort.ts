@@ -72,7 +72,7 @@ import { items } from "../feeds/items.js";
  * );  // ["Alice", "Émile"]
  * ```
  */
-export function sort<V>(comparator: (a: V, b: V) => number = ascending): Task<V> {
+export function sort<V>(comparator: (a: NoInfer<V>, b: NoInfer<V>) => number = ascending): Task<V> {
 
 	return source => items((async function* () {
 

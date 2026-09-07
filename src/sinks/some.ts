@@ -45,7 +45,7 @@ import { Sink } from "../index.js";
  * );  // true
  * ```
  */
-export function some<V>(predicate: (item: V) => Awaitable<boolean>): Sink<V, boolean> {
+export function some<V>(predicate: (item: NoInfer<V>) => Awaitable<boolean>): Sink<V, boolean> {
 
 	return async source => {
 

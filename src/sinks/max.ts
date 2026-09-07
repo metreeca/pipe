@@ -68,7 +68,7 @@ import { reduce } from "./reduce.js";
  * );  // undefined
  * ```
  */
-export function max<V>(comparator: (a: V, b: V) => number = ascending): Sink<V, undefined | V> {
+export function max<V>(comparator: (a: NoInfer<V>, b: NoInfer<V>) => number = ascending): Sink<V, undefined | V> {
 
 	return reduce((max: V, item: V) => comparator(item, max) > 0 ? item : max);
 

@@ -59,7 +59,7 @@ import { items } from "../feeds/items.js";
  * );  // [{ id: 1 }, { id: 2 }]
  * ```
  */
-export function distinct<V, K>(selector?: (item: V) => Awaitable<K>): Task<V> {
+export function distinct<V, K>(selector?: (item: NoInfer<V>) => Awaitable<K>): Task<V> {
 
 	return source => items((async function* () {
 

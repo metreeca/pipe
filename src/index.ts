@@ -126,6 +126,10 @@ export interface Task<V, R = V> {
  * A sink consumes the items of a {@link Feed}, driving the pipe that feeds it and computing the final result; one able
  * to decide its outcome early may stop consuming before the source runs dry.
  *
+ * Stating the item type alone, as `Sink<V>`, names any sink drawing `V` items whatever it resolves to, so sinks are
+ * held together under a common type or handed over as arguments with no result to agree on. A pipe closed by a sink
+ * declared that way resolves to `unknown`: state the result type wherever it is meant to be read.
+ *
  * The sink draws from a feed, so it may either iterate it with `for await` or compose it with further tasks and sinks,
  * delegating the whole computation or part of it to operations already available.
  *
@@ -134,9 +138,10 @@ export interface Task<V, R = V> {
  * > The feed handed over must be assumed to be drained by a single pass.
  *
  * @typeParam V The type of items drawn from the feed
- * @typeParam R The type of result computed over the items, defaulting to `V` for sinks resolving to a feed item
+ * @typeParam R The type of result computed over the items, defaulting to `unknown` for sinks whose result is of no
+ *   interest
  */
-export interface Sink<V, R = V> {
+export interface Sink<V, R = unknown> {
 
 	/**
 	 * Consumes the items.

@@ -36,6 +36,10 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   applying them to the feed it draws from, while a step reporting an async generator of its own adapts it with
   `items()`, as custom feeds already do
 
+- `Sink` result type defaults to `unknown` rather than to the item type: `Sink<V>` names a sink over `V` whatever it
+  resolves to, so a sink handed as an argument or stored under a common type no longer has to state a result nobody
+  reads
+
 - `pipe()` collapses its two overloads into a single signature accepting a `Feed` or a `Promise` and reporting it back
   as handed in: a pipe left open now brackets to the feed it ends with, rather than to the async iterable underlying
   it, leaving consumers typing the result as `AsyncIterable` unaffected, as a feed is one
@@ -78,6 +82,15 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - `Data` type, no longer part of the surface now that `flatMap` is gone: the shapes a feed is opened from are declared
   by the `items` signature
+
+### Fixed
+
+- steps take the item type from the feed they are applied to, no longer from the function handed to them: a consumer,
+  predicate, selector, extractor, reducer or comparator accepting any item, `console.log` and `Boolean` among them,
+  left the item type inferred as `any` or `unknown`, silently erasing the feed type for every step downstream of a
+  `peek`, `filter`, `distinct` or `group` and widening the results of `find`, `seek`, `toMap` and `toObject`; a step
+  composed on its own states the item type in the `Task` or `Sink` type it is declared under, or as an explicit type
+  argument, rather than through an annotated function
 
 ## [0.9.21](https://github.com/metreeca/flow/releases/tag/v0.9.21) - 2026-08-28
 

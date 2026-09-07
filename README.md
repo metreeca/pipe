@@ -8,7 +8,8 @@ Composable primitives for asynchronous data flows.
 from source to result:
 
 - **Focused API**: small operator set covering the common async iterable operations and composing with a natural syntax
-- **Type Safety**: type inference across pipe stages, from the data source through to the final result
+- **Type Safety**: item types carried from the data source through every stage to the final result, never dictated by
+  the functions handed to the steps
 - **Concurrency Control**: any task run concurrently over the feed, under an explicit bound on the items in flight
 - **Extensible Design**: custom steps written against the same contracts as the built-in ones, chaining in any order
 

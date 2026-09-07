@@ -66,7 +66,7 @@ import { reduce } from "./reduce.js";
  * );  // undefined
  * ```
  */
-export function min<V>(comparator: (a: V, b: V) => number = ascending): Sink<V, undefined | V> {
+export function min<V>(comparator: (a: NoInfer<V>, b: NoInfer<V>) => number = ascending): Sink<V, undefined | V> {
 
 	return reduce((min: V, item: V) => comparator(item, min) < 0 ? item : min);
 

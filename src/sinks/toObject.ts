@@ -51,7 +51,7 @@ import { Sink } from "../index.js";
  * @returns A sink resolving to the deeply {@link immutable} object pairing each extracted key with the item it was
  *   extracted from
  *
- * @throws {Error} If two items yield the same key
+ * @throws {@link !Error Error} If two items yield the same key
  *
  * @example
  *
@@ -63,7 +63,7 @@ import { Sink } from "../index.js";
  * ```
  */
 export function toObject<V, K extends PropertyKey>(
-	key: (item: V) => Awaitable<K>
+	key: (item: NoInfer<V>) => Awaitable<K>
 ): Sink<V, Readonly<Record<K, V>>>;
 
 /**
@@ -82,7 +82,7 @@ export function toObject<V, K extends PropertyKey>(
  * @returns A sink resolving to the deeply {@link immutable} object pairing each extracted key with the value
  *   extracted alongside it
  *
- * @throws {Error} If two items yield the same key
+ * @throws {@link !Error Error} If two items yield the same key
  *
  * @example
  *
@@ -94,8 +94,8 @@ export function toObject<V, K extends PropertyKey>(
  * ```
  */
 export function toObject<V, K extends PropertyKey, T>(
-	key: (item: V) => Awaitable<K>,
-	value: (item: V) => Awaitable<T>
+	key: (item: NoInfer<V>) => Awaitable<K>,
+	value: (item: NoInfer<V>) => Awaitable<T>
 ): Sink<V, Readonly<Record<K, T>>>;
 
 /**

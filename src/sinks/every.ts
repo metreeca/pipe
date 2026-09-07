@@ -46,7 +46,7 @@ import { Sink } from "../index.js";
  * );  // true
  * ```
  */
-export function every<V>(predicate: (item: V) => Awaitable<boolean>): Sink<V, boolean> {
+export function every<V>(predicate: (item: NoInfer<V>) => Awaitable<boolean>): Sink<V, boolean> {
 
 	return async source => {
 

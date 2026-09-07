@@ -55,7 +55,7 @@ import type { Optional } from "@metreeca/core";
  * );  // 1
  * ```
  */
-export function find<V>(predicate: (item: V) => Awaitable<boolean> = () => true): Sink<V, Optional<V>> {
+export function find<V>(predicate: (item: NoInfer<V>) => Awaitable<boolean> = () => true): Sink<V, Optional<V>> {
 
 	return async source => {
 

@@ -49,7 +49,7 @@ import { items } from "../feeds/items.js";
  * );  // logs 1, 2, 3; [1, 2, 3]
  * ```
  */
-export function peek<V>(consumer: (item: V) => unknown): Task<V> {
+export function peek<V>(consumer: (item: NoInfer<V>) => unknown): Task<V> {
 
 	return source => items((async function* () {
 		for await (const item of source) {

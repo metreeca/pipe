@@ -24,6 +24,12 @@
  * selected among them, resolve to `undefined` when the feed carries none and no result is defined, leaving the
  * choice of a fallback to the caller; {@link seek} fails instead, so the item it hands back is usable as is.
  *
+ * The item type of a sink is taken from the feed it is applied to, or from the {@link index.Sink Sink} type it is
+ * declared under, never from the consumer, predicate, extractor, reducer or comparator handed to it: a function
+ * accepting any item, `console.log` or `Boolean` among them, leaves the item type untouched, while one accepting a
+ * different type is rejected. A sink composed on its own, outside a pipe, states its item type in the type it is
+ * declared under or as an explicit type argument.
+ *
  * Every sink is classified along three axes:
  *
  * - **incremental** or **exhaustive**, for how much of the feed it draws before resolving

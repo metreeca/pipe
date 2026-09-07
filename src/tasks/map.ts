@@ -53,7 +53,7 @@ import { items } from "../feeds/items.js";
  *   with `flat(map(…))`
  * @see {@link join} to interleave those feeds instead, as `join(map(…))`
  */
-export function map<V, R>(mapper: (item: V) => Awaitable<R>): Task<V, R> {
+export function map<V, R>(mapper: (item: NoInfer<V>) => Awaitable<R>): Task<V, R> {
 
 	return source => items((async function* () {
 		for await (const item of source) {

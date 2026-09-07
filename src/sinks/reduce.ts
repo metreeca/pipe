@@ -46,7 +46,9 @@ import { Sink } from "../index.js";
  * );  // 15
  * ```
  */
-export function reduce<V>(reducer: (accumulator: V, item: V) => Awaitable<V>): Sink<V, undefined | V>;
+export function reduce<V>(
+	reducer: (accumulator: NoInfer<V>, item: NoInfer<V>) => Awaitable<V>
+): Sink<V, undefined | V>;
 
 /**
  * Creates a sink folding the feed into a value of a different type.
@@ -78,7 +80,7 @@ export function reduce<V>(reducer: (accumulator: V, item: V) => Awaitable<V>): S
  * );  // 25
  * ```
  */
-export function reduce<V, R>(reducer: (accumulator: R, item: V) => Awaitable<R>, initial: R): Sink<V, R>;
+export function reduce<V, R>(reducer: (accumulator: R, item: NoInfer<V>) => Awaitable<R>, initial: R): Sink<V, R>;
 
 /**
  * Creates a sink reducing the feed to a single value, with or without an initial value.

@@ -27,6 +27,12 @@
  * the one it reports are both drained by a single pass, however repeatable the source behind them: a composition to be
  * consumed twice is built afresh from the feed it opens with.
  *
+ * The item type of a task is taken from the feed it is applied to, or from the {@link index.Task Task} type it is
+ * declared under, never from the predicate, selector, mapper or comparator handed to it: a function accepting any
+ * item, `console.log` or `Boolean` among them, leaves the feed type untouched, while one accepting a different type
+ * is rejected. A task composed on its own, outside a pipe, states its item type in the type it is declared under or
+ * as an explicit type argument.
+ *
  * Every task is classified along three axes:
  *
  * - **incremental** or **exhaustive**, for how much of the feed it draws before emitting

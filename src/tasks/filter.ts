@@ -48,7 +48,7 @@ import { Task } from "../index.js";
  * );  // [2, 4]
  * ```
  */
-export function filter<V>(predicate: (item: V) => Awaitable<boolean>): Task<V> {
+export function filter<V>(predicate: (item: NoInfer<V>) => Awaitable<boolean>): Task<V> {
 
 	return source => items((async function* () {
 

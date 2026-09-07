@@ -46,7 +46,7 @@ import { Sink } from "../index.js";
  * );  // logs 1, 2, 3; 3
  * ```
  */
-export function each<V>(consumer: (item: V) => unknown): Sink<V, number> {
+export function each<V>(consumer: (item: NoInfer<V>) => unknown): Sink<V, number> {
 
 	return async source => {
 
