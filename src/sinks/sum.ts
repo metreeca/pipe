@@ -37,7 +37,7 @@ import { Sink } from "../index.js";
  *
  * @returns A sink resolving to the sum of the items of the feed, or to `undefined` if the feed carried no items
  *
- * @throws {TypeError} If the feed mixes `number` and `bigint` items
+ * @throws {@link !TypeError TypeError} If the feed mixes `number` and `bigint` items
  *
  * @example
  *

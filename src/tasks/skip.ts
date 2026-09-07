@@ -39,7 +39,7 @@ import { items } from "../feeds/items.js";
  *
  * @returns A task yielding the items following the first `n`
  *
- * @throws {TypeError} If `n` is not an integer
+ * @throws {@link !TypeError TypeError} If `n` is not an integer
  *
  * @example
  *

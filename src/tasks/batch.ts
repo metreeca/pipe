@@ -42,7 +42,7 @@ import { items } from "../feeds/items.js";
  *
  * @returns A task yielding the read-only lists of the items collected into each batch
  *
- * @throws {TypeError} If `size` is not an integer
+ * @throws {@link !TypeError TypeError} If `size` is not an integer
  *
  * @example
  *

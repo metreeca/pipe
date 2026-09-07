@@ -81,7 +81,7 @@ import type { Task } from "../index.js";
  *
  * @returns A task yielding the items `task` reports for every run, as they become available
  *
- * @throws {TypeError} If `runs` is not an integer
+ * @throws {@link !TypeError TypeError} If `runs` is not an integer
  *
  * @example
  *

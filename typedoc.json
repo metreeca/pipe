@@ -26,6 +26,14 @@
       "Awaitable": "https://metreeca.github.io/core/types/async.Awaitable.html",
       "immutable": "https://metreeca.github.io/core/functions/structures.immutable.html",
       "Primitive": "https://metreeca.github.io/core/types/index.Primitive.html"
+    },
+    "global": {
+      "Error": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error",
+      "TypeError": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypeError"
+    },
+    "typescript": {
+      "Error": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error",
+      "TypeError": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypeError"
     }
   },
   "githubPages": false,

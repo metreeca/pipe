@@ -34,7 +34,7 @@ import { items } from "./items.js";
  *
  * @returns A feed yielding the numbers from `start` towards `end`
  *
- * @throws {TypeError} If either `start` or `end` is not an integer
+ * @throws {@link !TypeError TypeError} If either `start` or `end` is not an integer
  *
  * @example
  *
