@@ -42,7 +42,7 @@
     "prime": "npm ci",
     "setup": "npm ci && sh package.sh",
     "build": "rm -rf dist docs && npx tsc && npx typedoc",
-    "check": "npx vitest run",
+    "check": "npx vitest --typecheck run",
     "proof": "npx typedoc && (npx typedoc --watch & npx five-server docs --open)"
   },
   "dependencies": {
