@@ -46,10 +46,6 @@ import { items } from "../feeds/items.js";
  *   (toArray())
  * );  // [1, 2, 3, 4]
  * ```
- *
- * @see {@link map} to open a feed for each item, expanding it in place with `flat(map(…))`
- * @see {@link join} to splice the same feeds as their items become available
- * @see {@link fork} to interleave several runs of a task over the same feed
  */
 export function flat<V>(): Task<Feed<V>, V>;
 
@@ -71,7 +67,7 @@ export function flat<V>(): Task<Feed<V>, V>;
  * >
  * > `task` draws from the whole feed, so state it initialises on invocation decides on every item, as it would
  * > anywhere else in the pipe. Where a source already carries feeds and a task is to be scoped to each of them,
- * > apply it within {@link map}: `flat(map(feed => feed(sort())))` orders every nested feed on its own.
+ * > apply it within `map()`: `flat(map(feed => feed(sort())))` orders every nested feed on its own.
  *
  * @typeParam V The type of items drawn from the feed
  * @typeParam R The type of items carried by the feeds `task` reports
@@ -89,10 +85,6 @@ export function flat<V>(): Task<Feed<V>, V>;
  *   (toArray())
  * );  // [1, 10, 2, 20, 3, 30]
  * ```
- *
- * @see {@link map} to open a feed for each item
- * @see {@link join} to splice the same feeds as their items become available
- * @see {@link fork} to interleave several runs of a task over the same feed
  */
 export function flat<V, R>(task: Task<V, Feed<R>>): Task<V, R>;
 

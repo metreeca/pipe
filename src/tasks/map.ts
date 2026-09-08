@@ -48,10 +48,6 @@ import { items } from "../feeds/items.js";
  *   (toArray())
  * );  // [2, 4, 6]
  * ```
- *
- * @see {@link flat} to expand each item into several, converting it into a feed of its own and splicing the feeds
- *   with `flat(map(…))`
- * @see {@link join} to interleave those feeds instead, as `join(map(…))`
  */
 export function map<V, R>(mapper: (item: NoInfer<V>) => Awaitable<R>): Task<V, R> {
 

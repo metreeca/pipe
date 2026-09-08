@@ -14,6 +14,14 @@ description: Development guidelines and conventions for the @metreeca/flow packa
 > - **ALL** relevant skills **MUST** be used when applicable without continuous prompting.
 > - **SKILL** guidance **ALWAYS** supersedes internal general-purpose knowledge.
 
+# Documentation
+
+> [!CAUTION]
+> **NEVER** cross-reference one task symbol from another: no `@see` entries and no `{@link}` mentions pointing from a
+> task to a sibling. Each task documents its own contract and stands on its own; the relations between tasks are
+> covered by the module description and by the README. Where prose has to name a sibling, write it as a backticked
+> call, as `flat()`, never as a link.
+
 # NPM Scripts
 
 - **`npm run clean`** - Remove dependencies and build artefacts

@@ -30,8 +30,8 @@ import type { Feed, Task } from "../index.js";
  * > - **Incremental**: items are emitted as the nested feeds report them, so the reported feed runs dry as the source
  * >   and its nested feeds do, an infinite nested feed keeping it open without holding back the items of the others.
  * > - **Materialising**: a pending item is held for every nested feed open at the same time, and nothing bounds their
- * >   number, so a source yielding feeds faster than they run dry may exhaust memory; splice with {@link flat}
- * >   instead where the source carries an unbounded number of feeds.
+ * >   number, so a source yielding feeds faster than they run dry may exhaust memory; splice with `flat()` instead
+ * >   where the source carries an unbounded number of feeds.
  * > - **Stateless**: nested feeds are interleaved without state carried across them.
  *
  * > [!WARNING]
@@ -63,9 +63,6 @@ import type { Feed, Task } from "../index.js";
  *   (toArray())
  * );  // [3, 4, 1, 2], as the faster feed reports first
  * ```
- *
- * @see {@link flat} to splice the same feeds in source order
- * @see {@link fork} to interleave several runs of a task over the same feed
  */
 export function join<V>(): Task<Feed<V>, V>;
 
@@ -81,8 +78,8 @@ export function join<V>(): Task<Feed<V>, V>;
  * >   source, `task` and the feeds it reports do, an infinite one keeping it open without holding back the items of
  * >   the others.
  * > - **Materialising**: a pending item is held for every reported feed open at the same time, and nothing bounds
- * >   their number, so feeds opened faster than they run dry may exhaust memory; splice with {@link flat} instead
- * >   where `task` reports an unbounded number of feeds.
+ * >   their number, so feeds opened faster than they run dry may exhaust memory; splice with `flat()` instead where
+ * >   `task` reports an unbounded number of feeds.
  * > - **Stateless**: the interleaving carries no state across the reported feeds, whatever `task` carries across the
  * >   items it draws.
  *
@@ -90,7 +87,7 @@ export function join<V>(): Task<Feed<V>, V>;
  * >
  * > `task` draws from the whole feed, so state it initialises on invocation decides on every item, as it would
  * > anywhere else in the pipe. Where a source already carries feeds and a task is to be scoped to each of them,
- * > apply it within {@link map}: `join(map(feed => feed(take(2))))` yields its quota to every nested feed.
+ * > apply it within `map()`: `join(map(feed => feed(take(2))))` yields its quota to every nested feed.
  *
  * @typeParam V The type of items drawn from the feed
  * @typeParam R The type of items carried by the feeds `task` reports
@@ -108,10 +105,6 @@ export function join<V>(): Task<Feed<V>, V>;
  *   (toArray())
  * );  // the items of the faster retrieval first
  * ```
- *
- * @see {@link map} to open a feed for each item
- * @see {@link flat} to splice the same feeds in source order
- * @see {@link fork} to interleave several runs of a task over the same feed
  */
 export function join<V, R>(task: Task<V, Feed<R>>): Task<V, R>;
 

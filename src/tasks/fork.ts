@@ -28,10 +28,10 @@ import type { Task } from "../index.js";
  * uncapped fork opens a run for every item the source delivers instead, trading that ceiling for a throughput bounded
  * only by the source.
  *
- * This is the concurrency knob for the work a task performs: {@link flat} draws the feeds a task opens one at a time
- * and {@link join} opens every one of them at once, so neither caps the work in flight and the window belongs around
- * the task instead. Runs are interleaved on the event loop rather than executed in parallel, so a task blocking it
- * gains nothing from being forked.
+ * This is the concurrency knob for the work a task performs: `flat()` draws the feeds a task opens one at a time and
+ * `join()` opens every one of them at once, so neither caps the work in flight and the window belongs around the task
+ * instead. Runs are interleaved on the event loop rather than executed in parallel, so a task blocking it gains
+ * nothing from being forked.
  *
  * > [!WARNING]
  * >
@@ -58,7 +58,7 @@ import type { Task } from "../index.js";
  * > closure is shared across the runs instead, and reached concurrently.
  * >
  * > Fork a stateful task only where its outcome is sound on part of the items. Where the state belongs to one item
- * > rather than to the feed, open a pipe per item with {@link map} and collapse the pipes with {@link join}, as
+ * > rather than to the feed, open a pipe per item with `map()` and collapse the pipes with `join()`, as
  * > `join(map(…))`, which keeps the state scoped to its item while still drawing from every one of them at once.
  *
  * > [!NOTE]
@@ -92,10 +92,6 @@ import type { Task } from "../index.js";
  *   (toArray())
  * );  // 4 retrievals in flight, results as they land
  * ```
- *
- * @see {@link join} to interleave the feeds carried by a feed, with `fork()` applied within {@link map} bounding the
- *   work carried out inside each
- * @see {@link flat} to splice those feeds in source order instead
  */
 export function fork<V, R>(runs: number, task: Task<V, R>): Task<V, R> {
 
