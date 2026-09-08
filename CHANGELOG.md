@@ -19,6 +19,11 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   a branch closing early drops out without holding back the others; unlike the runs of a `fork`, which split the items
   among themselves, every branch is applied to the whole feed and draws every item
 
+- `drain` task carrying on with the items a sink computes over the whole feed: a step that cannot decide before the feed
+  runs dry, reconciling it against a stored snapshot or clearing it against a quota, is written as an ordinary
+  asynchronous function of the feed rather than as a generator, and a sink already available is lifted back into the
+  pipe the same way, as `drain(toSet())` is to carry on with the distinct items alone
+
 - `seek` sink retrieving the first matching item of a feed, failing where none does instead of resolving to
   `undefined` as `find` does, so the item handed back is usable as is, with no check to tell a missing item from an
   `undefined` item the feed legitimately carries
