@@ -194,10 +194,10 @@ await pipe(
 ### Splicers
 
 Splice several feeds into the pipe: the nested feeds a source carries or a task opens, in source order or interleaved
-as their items become available, or the concurrent runs of a task.
+as their items become available, the concurrent runs of a task, or the branches every item is handed to.
 
 ```typescript
-import { flat, fork, join, map, take } from '@metreeca/flow/tasks';
+import { filter, flat, fork, join, map, take, tee } from '@metreeca/flow/tasks';
 
 await pipe(
 	(items([items([1, 2]), items([3, 4])]))
@@ -228,6 +228,12 @@ await pipe(
 	(fork(4, retrieve()))
 	(toArray())
 );  // at most 4 items in flight, results in completion order
+
+await pipe(
+	(items([1, 2, 3]))
+	(tee(map(n => n*2), filter(n => n > 2)))
+	(toArray())
+);  // 2, 4, 6 from the doubling branch and 3 from the filtering one, interleaved in no defined order
 ```
 
 `flat()` splices one level only: a feed carried by a nested feed is reported as an item, ready for a further splice. Its
@@ -235,6 +241,12 @@ optional task opens the feeds to splice, drawing from the whole feed, so an item
 in place; scope a task to each nested feed by applying it within `map()`, where the source already carries feeds.
 `join()` splices the same way, but opens every nested feed as soon as it is reported and emits items as they become
 available, so output order is not preserved and nothing bounds the number of feeds open at once.
+
+`tee()` fans out instead of splitting: every branch is applied to the whole feed and handed every item, so a stateful
+branch decides on every item, unlike a forked run; the items the branches report are interleaved as `join()` interleaves
+nested feeds. Branches draw in lockstep, so nothing is held beyond the item on offer and the source advances at the pace
+of the slowest branch: pacing and long-running work belong downstream of the fan-out, while a branch closing early, as
+`take()` does, drops out and stops holding back the others.
 
 See [Concurrent Processing](#concurrent-processing) for the bounds `fork()` sets and the state it tolerates.
 

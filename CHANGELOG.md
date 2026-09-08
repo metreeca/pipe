@@ -14,6 +14,11 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   interleaves their items as they are reported; both optionally wrap a task opening the feeds to collapse, so
   `flat(map(mapper))` expands each item into the items of its own feed
 
+- `tee` task handing every item to several branches and interleaving the items they report: the branches draw in
+  lockstep, so nothing is held beyond the item on offer and the source advances at the pace of the slowest one, while
+  a branch closing early drops out without holding back the others; unlike the runs of a `fork`, which split the items
+  among themselves, every branch is applied to the whole feed and draws every item
+
 - `seek` sink retrieving the first matching item of a feed, failing where none does instead of resolving to
   `undefined` as `find` does, so the item handed back is usable as is, with no check to tell a missing item from an
   `undefined` item the feed legitimately carries
