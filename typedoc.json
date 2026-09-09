@@ -24,6 +24,7 @@
     "@metreeca/core": {
       "ascending": "https://metreeca.github.io/core/functions/order.ascending.html",
       "Awaitable": "https://metreeca.github.io/core/types/async.Awaitable.html",
+    "Awaitables": "https://metreeca.github.io/core/types/async.Awaitables.html",
       "immutable": "https://metreeca.github.io/core/functions/structures.immutable.html",
       "Primitive": "https://metreeca.github.io/core/types/index.Primitive.html"
     },
