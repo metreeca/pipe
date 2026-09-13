@@ -170,7 +170,7 @@ await pipe(
 Map items to values of a different type, either one by one, in groups, or over the feed as a whole.
 
 ```typescript
-import { batch, drain, group, map } from '@metreeca/flow/tasks';
+import { batch, group, map, recast } from '@metreeca/flow/tasks';
 
 await pipe(
 	(items([1, 2, 3]))
@@ -192,16 +192,18 @@ await pipe(
 
 await pipe(
 	(items([1, 2, 3, 4]))
-	(drain(async feed => (await feed(toArray())).slice(-2)))
+	(recast(async feed => (await feed(toArray())).slice(-2)))
 	(toArray())
 );  // [3, 4], as the last items are known only once the feed runs dry
 ```
 
-`drain()` hands the feed to a sink and carries on with the items it computes, so a step that cannot decide before the
+`recast()` hands the feed to a mapper and carries on with the items it computes, so a step that cannot decide before the
 feed runs dry (reconciling it against a stored snapshot, ranking it, clearing it against a quota) is written as an
 ordinary asynchronous function of the feed rather than as a generator. Sinks already available are lifted back into the
-pipe the same way, as `drain(toSet())` is to carry on with the distinct items alone. Whatever the sink resolves to is
-emitted item by item, so the items carried on need be neither the ones drawn, nor as many, nor of the same type.
+pipe the same way, as `recast(toSet())` is to carry on with the distinct items alone. The items are supplied either as
+a batch listing them or as a feed yielding them, handed back as they are or awaited, so a step composing the feed it
+draws from with tasks already available is spared the generator as well. Whatever the mapper computes is emitted item
+by item, so the items carried on need be neither the ones drawn, nor as many, nor of the same type.
 
 ### Splicers
 
@@ -444,11 +446,11 @@ inlet(() => cursor.next(), AbortSignal.timeout(1_000));  // every value reported
 
 Two hazards follow, the first on infinite feeds alone, the second on any feed large enough:
 
-- **never completing**: `sort()`, `group()`, an unbounded `batch()` and a `drain()` whose sink draws the feed entire
+- **never completing**: `sort()`, `group()`, an unbounded `batch()` and a `recast()` whose mapper draws the feed entire
   emit nothing before the whole feed is drawn, and every sink but `some()`, `every()`, `find()` and `seek()` needs
   every item
-- **exhausting memory**: the first three of those tasks materialise the feed whole and a `drain()` holds whatever its
-  sink retains and resolves to, `distinct()` retains every key seen, `join()` holds a pending item per open nested feed
+- **exhausting memory**: the first three of those tasks materialise the feed whole and a `recast()` holds whatever its
+  mapper retains and computes, `distinct()` retains every key seen, `join()` holds a pending item per open nested feed
   and an uncapped `fork()` a run per item drawn, and the collectors build the whole container before resolving
 
 Batch by a positive size, cap the runs of a fork, or bound the feed upstream.
@@ -492,7 +494,7 @@ source, at the cost of an unbounded number of items in flight. The number of run
 `TypeError` is thrown; negative values are treated as 1, that is, as sequential processing.
 
 A forked task never sees the whole feed. The task is a single function invoked once per run: state it initialises on
-invocation, as `distinct()`, `sort()`, `take()`, `skip()`, `batch()`, `group()` and `drain()` do, is tracked per run
+invocation, as `distinct()`, `sort()`, `take()`, `skip()`, `batch()`, `group()` and `recast()` do, is tracked per run
 rather than across the feed as a whole, while state captured in its enclosing closure is shared by every run and
 accessed concurrently. Fork a stateful task only where its outcome is sound on the items one run happens to draw.
 
@@ -578,8 +580,8 @@ await pipe(
 > generator object to [`items()`](https://metreeca.github.io/flow/functions/items.html) is the shortest route there,
 > while a transformation delegating to tasks already available composes the feed it draws from with them and reports
 > what they report, a feed already. A transformation deciding on the feed as a whole is spared the generator altogether
-> by `drain()`, which carries on with the items a sink computes over it. The reported feed is drained by a single pass,
-> as every built-in one is, and so is the feed the task draws from.
+> by `recast()`, which carries on with the items a mapper computes over it. The reported feed is drained by a single
+> pass, as every built-in one is, and so is the feed the task draws from.
 
 ## Creating Custom Sinks
 

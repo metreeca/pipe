@@ -18,7 +18,7 @@ import { describe, expect, it } from "vitest";
 import { items } from "../feeds/index.js";
 import { Feed, pipe } from "../index.js";
 import { toArray, toSet } from "../sinks/index.js";
-import { drain } from "./drain.js";
+import { recast } from "./recast.js";
 import { map } from "./map.js";
 import { peek } from "./peek.js";
 
@@ -33,21 +33,21 @@ function tracked(drawn: number[], values: readonly number[]): Feed<number> {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-describe("drain()", () => {
+describe("recast()", () => {
 
-	it("should emit the items the sink computes", async () => {
+	it("should emit the items the mapper computes", async () => {
 
-		const values = await items([1, 2, 3, 4])(drain(async feed => (await feed(toArray())).slice(-2)))(toArray());
+		const values = await items([1, 2, 3, 4])(recast(async feed => (await feed(toArray())).slice(-2)))(toArray());
 
 		expect(values).toEqual([3, 4]);
 
 	});
 
-	it("should hand the sink the items of the feed", async () => {
+	it("should hand the mapper the items of the feed", async () => {
 
 		const drawn: number[][] = [];
 
-		await items([1, 2, 3])(drain(async feed => {
+		await items([1, 2, 3])(recast(async feed => {
 			drawn.push([...await feed(toArray())]);
 			return [];
 		}))(toArray());
@@ -58,7 +58,7 @@ describe("drain()", () => {
 
 	it("should carry on with the items of a sink already available", async () => {
 
-		const values = await items([1, 2, 2, 3])(drain(toSet()))(toArray());
+		const values = await items([1, 2, 2, 3])(recast(toSet()))(toArray());
 
 		expect(values).toEqual([1, 2, 3]);
 
@@ -66,15 +66,15 @@ describe("drain()", () => {
 
 	it("should emit items of a different type", async () => {
 
-		const values = await items([1, 2])(drain(async feed => (await feed(toArray())).map(n => `<${n}>`)))(toArray());
+		const values = await items([1, 2])(recast(async feed => (await feed(toArray())).map(n => `<${n}>`)))(toArray());
 
 		expect(values).toEqual(["<1>", "<2>"]);
 
 	});
 
-	it("should empty the feed where the sink computes nothing", async () => {
+	it("should empty the feed where the mapper computes nothing", async () => {
 
-		const values = await items([1, 2, 3])(drain(async () => []))(toArray());
+		const values = await items([1, 2, 3])(recast(async () => []))(toArray());
 
 		expect(values).toEqual([]);
 
@@ -82,7 +82,7 @@ describe("drain()", () => {
 
 	it("should emit the computed items where the feed draws none", async () => {
 
-		const values = await items<number>([])(drain(async () => [0]))(toArray());
+		const values = await items<number>([])(recast(async () => [0]))(toArray());
 
 		expect(values).toEqual([0]);
 
@@ -90,9 +90,17 @@ describe("drain()", () => {
 
 	it("should accept items supplied as a feed of their own", async () => {
 
-		const values = await items([1, 2])(drain(async feed => items(await feed(toArray()))(map(n => n*10))))(toArray());
+		const values = await items([1, 2])(recast(async feed => items(await feed(toArray()))(map(n => n*10))))(toArray());
 
 		expect(values).toEqual([10, 20]);
+
+	});
+
+	it("should accept items handed back without awaiting", async () => {
+
+		const values = await items([1, 2, 3])(recast(feed => feed(map(n => n*10))))(toArray());
+
+		expect(values).toEqual([10, 20, 30]);
 
 	});
 
@@ -100,17 +108,17 @@ describe("drain()", () => {
 
 		const drawn: number[] = [];
 
-		tracked(drawn, [1, 2, 3])(drain(toArray()));
+		tracked(drawn, [1, 2, 3])(recast(toArray()));
 
 		expect(drawn).toEqual([]);
 
 	});
 
-	it("should emit nothing before the sink resolves", async () => {
+	it("should emit nothing before the mapper resolves", async () => {
 
 		const drawn: number[] = [];
 
-		const iterator = tracked(drawn, [1, 2, 3])(drain(toArray()))[Symbol.asyncIterator]();
+		const iterator = tracked(drawn, [1, 2, 3])(recast(toArray()))[Symbol.asyncIterator]();
 
 		await iterator.next();
 
@@ -120,7 +128,7 @@ describe("drain()", () => {
 
 	it("should stop emitting on early termination", async () => {
 
-		const iterator = items([1, 2, 3])(drain(toArray()))[Symbol.asyncIterator]();
+		const iterator = items([1, 2, 3])(recast(toArray()))[Symbol.asyncIterator]();
 
 		await iterator.next();
 
@@ -128,13 +136,13 @@ describe("drain()", () => {
 
 	});
 
-	it("should propagate failures raised by the sink", async () => {
+	it("should propagate failures raised by the mapper", async () => {
 
-		const failing = items([1, 2, 3])(drain<number, number>(async () => {
-			throw new Error("sink failed");
+		const failing = items([1, 2, 3])(recast<number, number>(async () => {
+			throw new Error("mapper failed");
 		}));
 
-		await expect(failing(toArray())).rejects.toThrow("sink failed");
+		await expect(failing(toArray())).rejects.toThrow("mapper failed");
 
 	});
 
@@ -145,7 +153,7 @@ describe("drain()", () => {
 			throw new Error("source failed");
 		})());
 
-		await expect(failing(drain(toArray()))(toArray())).rejects.toThrow("source failed");
+		await expect(failing(recast(toArray()))(toArray())).rejects.toThrow("source failed");
 
 	});
 
@@ -153,7 +161,7 @@ describe("drain()", () => {
 
 		const values = await pipe(
 			(items([1, 2, 3]))
-			(drain(toSet()))
+			(recast(toSet()))
 			(map(n => n*10))
 			(toArray())
 		);

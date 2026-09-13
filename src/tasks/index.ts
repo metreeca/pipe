@@ -43,8 +43,8 @@
  * > [!WARNING]
  * >
  * > An exhaustive task never completes on an infinite feed, and a materialising one may exhaust memory on a large
- * > feed, bounded or not. {@link sort}, {@link group}, an unbounded {@link batch} and a {@link drain} whose sink draws
- * > the feed entire are both; {@link distinct}, {@link join} and an uncapped {@link fork} are incremental yet
+ * > feed, bounded or not. {@link sort}, {@link group}, an unbounded {@link batch} and a {@link recast} whose mapper
+ * > draws the feed entire are both; {@link distinct}, {@link join} and an uncapped {@link fork} are incremental yet
  * > materialising. Bound the feed upstream with {@link take}, batch by a positive size, or cap the runs of a fork.
  *
  * > [!NOTE]
@@ -53,7 +53,7 @@
  * > obtained: handing the generator object to {@link feeds.items items()} is the shortest route there, while a
  * > transformation delegating to tasks already available composes the feed it draws from with them and reports what
  * > they report, a feed already. A transformation deciding on the feed as a whole is spared the generator altogether
- * > by {@link drain}, which carries on with the items a sink computes over it.
+ * > by {@link recast}, which carries on with the items a mapper computes over it.
  *
  * **Custom Tasks** extend a pipe, drawing the items of a feed and reporting a new one; the transformation is most
  * easily written as an async generator handed to {@link feeds.items items()}, with items to be dropped left unyielded:
@@ -94,7 +94,7 @@ export * from "./peek.js";
 export * from "./map.js";
 export * from "./batch.js";
 export * from "./group.js";
-export * from "./drain.js";
+export * from "./recast.js";
 
 // splicers
 

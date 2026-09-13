@@ -7,6 +7,14 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unpublished](https://github.com/metreeca/flow/compare/v0.10.0...HEAD)
 
+### Changed
+
+- `drain` task renamed to `recast`, leaving *drain* to the sense it carries throughout the docs, that of a feed
+  consumed by a single pass
+
+- `recast` accepting an ordinary function of the feed in place of a sink: the items to carry on with are handed back
+  either directly or awaited, so a mapper composing the feed it draws from is written without an intervening generator
+
 ## [0.10.0](https://github.com/metreeca/flow/compare/v0.9.21...v0.10.0) - 2026-09-09
 
 ### Added
