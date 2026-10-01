@@ -1,15 +1,14 @@
-# Metreeca Tide
+# Metreeca Pipe
 
-Ready-made tasks for retrieving and persisting content across external data sources.
+Ready-made tasks for retrieving and persisting data from external sources.
 
-**Metreeca Tide** brings ready-made [@metreeca/flow](https://github.com/metreeca/flow) tasks for moving content between
+**Metreeca Pipe** brings ready-made [@metreeca/flow](https://github.com/metreeca/flow) tasks for moving content between
 a pipeline and the systems it works with: drawing records out of web pages, object stores and databases, and writing
 results back to them. The tasks run under the [@metreeca/gear](https://github.com/metreeca/gear) job executor, which
 supplies the shared services they draw on.
 
 - **Ready-Made Tasks**: retrieval and persistence, chaining alongside any other task
-- **Shared Services**: the clients, credentials and connection pools a run needs, built on demand and released as it
-  ends
+- **Shared Services**: clients, credentials and connection pools, built on demand and released after the run
 - **Custom Bindings**: a stubbed, throttled or recorded source swapped in for a run, leaving the job untouched
 - **Minimal Footprint**: one package per source family, each pulling in only the drivers that family needs
 
@@ -22,8 +21,7 @@ supplies the shared services they draw on.
 
 ```shell
 npm install @metreeca/gear            # job executor and shared services
-npm install @metreeca/tide            # source access contracts and shared services
-npm install @metreeca/tide-<source>   # task package, one per source family
+npm install @metreeca/pipe-<source>   # task package, one per source family
 ```
 
 > [!WARNING]
@@ -31,30 +29,29 @@ npm install @metreeca/tide-<source>   # task package, one per source family
 > TypeScript consumers must use `"moduleResolution": "nodenext"/"node16"/"bundler"` in `tsconfig.json`.
 > The legacy `"node"` resolver is not supported.
 
-Install the core package, then add a task package for each source family the pipeline reaches. Source packages are
-self-contained leaves, each pulling in only the drivers its own family needs. The job executor comes from
-[@metreeca/gear](https://github.com/metreeca/gear), which the core package pulls in transitively; install it directly to
-set up and run a job.
+Add a task package for each source family the pipeline reaches. Source packages are self-contained leaves, each pulling
+in only the drivers its own family needs. The job executor comes from [@metreeca/gear](https://github.com/metreeca/gear),
+which the task packages pull in transitively; install it directly to set up and run a job.
 
-| Package          | Description                                 |
-|------------------|---------------------------------------------|
-| [@metreeca/tide] | Source access contracts and shared services |
+| Package              | Description          |
+|----------------------|----------------------|
+| [@metreeca/pipe-url] | URL processing tasks |
 
-[@metreeca/tide]: https://metreeca.github.io/tide/modules/_metreeca_tide.html
+[@metreeca/pipe-url]: https://metreeca.github.io/pipe/modules/_metreeca_pipe-url.html
 
 # Usage
 
 > [!NOTE]
 >
 > Each package documents its own API in its README and API reference; for complete coverage, see the
-> [API reference](https://metreeca.github.io/tide/).
+> [API reference](https://metreeca.github.io/pipe/).
 
 # Support
 
-- open an [issue](https://github.com/metreeca/tide/issues) to report a problem or to suggest a new feature
-- start a [discussion](https://github.com/metreeca/tide/discussions) to ask a how-to question or to share an idea
+- open an [issue](https://github.com/metreeca/pipe/issues) to report a problem or to suggest a new feature
+- start a [discussion](https://github.com/metreeca/pipe/discussions) to ask a how-to question or to share an idea
 
 # License
 
 This project is licensed under the Apache 2.0 License –
-see [LICENSE](https://github.com/metreeca/tide?tab=Apache-2.0-1-ov-file) file for details.
+see [LICENSE](https://github.com/metreeca/pipe?tab=Apache-2.0-1-ov-file) file for details.

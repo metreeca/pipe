@@ -1,7 +1,7 @@
 ---
 name: "Task"
 about: "Track a piece of work to be done"
-title: "What needs to be done on Metreeca Tide?"
+title: "What needs to be done on Metreeca Pipe?"
 type: "Task"
 ---
 

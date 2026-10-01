@@ -3,10 +3,10 @@
     "packages/*"
   ],
   "entryPointStrategy": "packages",
-  "name": "Metreeca Tide",
+  "name": "Metreeca Pipe",
   "out": "docs",
   "readme": "README.md",
-  "hostedBaseUrl": "https://metreeca.github.io/tide/",
+  "hostedBaseUrl": "https://metreeca.github.io/pipe/",
   "useFirstParagraphOfCommentAsSummary": true,
   "favicon": "https://metreeca.com/assets/icon.ico",
   "sourceLinkExternal": true,
@@ -28,7 +28,7 @@
     }
   },
   "navigationLinks": {
-    "GitHub": "https://github.com/metreeca/tide"
+    "GitHub": "https://github.com/metreeca/pipe"
   },
   "githubPages": false,
   "hideGenerator": true,

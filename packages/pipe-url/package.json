@@ -1,16 +1,17 @@
 {
-  "name": "@metreeca/tide",
-  "version": "0.1.0",
-  "description": "Source access contracts and shared services for @metreeca/tide.",
+  "name": "@metreeca/pipe-url",
+  "version": "0.10.0",
+  "description": "URL processing tasks for @metreeca/pipe.",
   "keywords": [
     "typescript",
     "pipeline",
     "etl",
-    "integration"
+    "extraction",
+    "url"
   ],
-  "homepage": "https://metreeca.github.io/tide/",
+  "homepage": "https://metreeca.github.io/pipe/",
   "bugs": {
-    "url": "https://github.com/metreeca/tide/issues",
+    "url": "https://github.com/metreeca/pipe/issues",
     "email": "info@metreeca.com"
   },
   "license": "Apache-2.0",
@@ -21,8 +22,8 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/metreeca/tide.git",
-    "directory": "packages/tide"
+    "url": "git+https://github.com/metreeca/pipe.git",
+    "directory": "packages/pipe-url"
   },
   "type": "module",
   "sideEffects": false,
@@ -38,7 +39,7 @@
     "dist"
   ],
   "engines": {
-    "node": ">=22.0.0"
+    "node": ">=22.22.0"
   },
   "scripts": {
     "clean": "rm -rf dist docs node_modules",
@@ -46,10 +47,11 @@
     "check": "npx vitest --typecheck run"
   },
   "dependencies": {
-    "@metreeca/core": "^0.9.22",
-    "@metreeca/flow": "^0.9.21",
-    "@metreeca/gear": "^0.1.1",
-    "@metreeca/tape": "^0.10.0"
+    "@metreeca/core": "^0.12.0",
+    "@metreeca/flow": "^0.11.0",
+    "@metreeca/gear": "^0.3.0",
+    "@metreeca/http": "^0.4.0",
+    "@metreeca/tape": "^0.11.0"
   },
   "devDependencies": {
     "@types/node": "^25.9.3",

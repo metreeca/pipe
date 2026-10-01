@@ -18,4 +18,4 @@ npx link \
   ../Core \
   ../Tape \
   ../Flow \
-  ../Gear/packages/*
+  ../Gear/packages/gear

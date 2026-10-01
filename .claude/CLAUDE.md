@@ -11,8 +11,8 @@
 
 # Overview
 
-`@metreeca/tide` is a standalone, general-purpose monorepo collecting the source access framework core and its source
-family task packages, each sitting directly under `packages/` (for example `packages/tide-sql/`).
+`@metreeca/pipe` is a standalone, general-purpose monorepo collecting source family task packages, each sitting directly
+under `packages/` (for example `packages/pipe-sql/`).
 
 Jobs run under the `@metreeca/gear` executor: this repository contributes retrieval and persistence tasks, **NEVER** an
 execution runtime of its own. Reach for `executor`, `bind` and `service` from `@metreeca/gear` rather than
@@ -27,10 +27,10 @@ what they carry sits on the other side of it.
 - [@metreeca/core](https://github.com/metreeca/core) - Core utilities and shared types
 - [@metreeca/flow](https://github.com/metreeca/flow) - Composable async iterable processing
 - [@metreeca/tape](https://github.com/metreeca/tape) - Simplified facade for the LogTape logging framework
-- [@metreeca/gear](https://github.com/metreeca/gear) - Ready-made tasks and shared services for ETL jobs, supplying the
-  job executor and service locator this repository builds on
-- [@metreeca/mime](https://github.com/metreeca/mime) - Ready-made tasks for retrieving and parsing content by media
-  type, covering the parsing and serialisation this repository hands off
+- [@metreeca/gear](https://github.com/metreeca/gear) - Job executor and shared services for data pipelines, which this
+  repository builds on
+- [@metreeca/mime](https://github.com/metreeca/mime) - Ready-made tasks for parsing and serialising content by media
+  type, covering the work this repository hands off
 
 # NPM Scripts
 
@@ -48,12 +48,11 @@ what they carry sits on the other side of it.
 
 # Package Layout
 
-The root `package.json` `workspaces` glob (`packages/*`) covers the framework packages, each in its own directory
-immediately under `packages/` (for example `packages/tide`).
+The root `package.json` `workspaces` glob (`packages/*`) covers the task packages, each in its own directory immediately
+under `packages/` (for example `packages/pipe-url`).
 
 Source packages are self-contained leaves named after the family of systems they reach, not after the driver they reach
-it with: `tide-sql`, not `tide-postgres` or `tide-knex`. Each pulls in the core package transitively and only the
-drivers its own family needs.
+it with: `pipe-sql`, not `pipe-postgres` or `pipe-knex`. Each pulls in only the drivers its own family needs.
 
 Retrieval and persistence live together in the package for the family they address: the split follows the system a task
 talks to, not the direction the content moves in.
@@ -82,14 +81,14 @@ const record = lazy(async () => service(getStore)(await key(source))); // ❌
 
 # Testing
 
-The root `vitest.config.ts` aliases all workspace `@metreeca/tide*` packages to their TypeScript source via regex, so
-vitest transpiles directly from `src/` without requiring a prior build step. The resolver maps each `@metreeca/tide*`
+The root `vitest.config.ts` aliases all workspace `@metreeca/pipe*` packages to their TypeScript source via regex, so
+vitest transpiles directly from `src/` without requiring a prior build step. The resolver maps each `@metreeca/pipe*`
 specifier to `packages/<package>/src`; the aliases are convention-based and require no manual updates when adding
 packages or subpath exports.
 
 # Version Management
 
 All workspace packages share the root `package.json` version. Beyond the `version` fields the release flow already
-cascades, update the internal `@metreeca/tide*` dependency ranges in every `packages/**/package.json` to match.
+cascades, update the internal `@metreeca/pipe*` dependency ranges in every `packages/**/package.json` to match.
 
-When adding, removing, or renaming packages, update the package table in the root `README.md` Usage section to match.
+When adding, removing, or renaming packages, update the package table in the root `README.md` Installation section to match.

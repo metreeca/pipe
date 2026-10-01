@@ -30,22 +30,22 @@ export default defineConfig({
 		passWithNoTests: true,
 
 		typecheck: {
-			include: ["**/src/*.test-d.ts"],
-			tsconfig: "tsconfig.json"
+			include: ["**/src/**/*.test-d.ts"],
+			tsconfig: "packages/pipe-url/tsconfig.json"
 		}
 
 	},
 
 	plugins: [{
 
-		name: "tide-resolver",
+		name: "pipe-resolver",
 		enforce: "pre",
 
 		/**
-		 * Resolves `@metreeca/tide*` workspace imports to TypeScript source for build-free testing.
+		 * Resolves `@metreeca/pipe*` workspace imports to TypeScript source for build-free testing.
 		 *
-		 * - `@metreeca/tide-pkg` → `packages/tide-pkg/src/index.ts`
-		 * - `@metreeca/tide-pkg/module` → `packages/tide-pkg/src/module.ts` or `packages/tide-pkg/src/module/index.ts`
+		 * - `@metreeca/pipe-pkg` → `packages/pipe-pkg/src/index.ts`
+		 * - `@metreeca/pipe-pkg/module` → `packages/pipe-pkg/src/module.ts` or `packages/pipe-pkg/src/module/index.ts`
 		 *
 		 * @param id - The module specifier to resolve
 		 *
@@ -53,7 +53,7 @@ export default defineConfig({
 		 */
 		resolveId(id: string) {
 
-			const bare = id.match(/^@metreeca\/(tide[^/]*)$/);
+			const bare = id.match(/^@metreeca\/(pipe[^/]*)$/);
 
 			if ( bare ) { // bare package import
 
@@ -63,7 +63,7 @@ export default defineConfig({
 
 			} else { // subpath import
 
-				const module = id.match(/^@metreeca\/(tide[^/]*)\/(.+)$/);
+				const module = id.match(/^@metreeca\/(pipe[^/]*)\/(.+)$/);
 
 				if ( module ) {
 

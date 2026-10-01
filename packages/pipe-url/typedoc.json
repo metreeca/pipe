@@ -1,0 +1,23 @@
+{
+  "externalSymbolLinkMappings": {
+    "@metreeca/core": {
+      "*": "https://metreeca.github.io/core/"
+    },
+    "@metreeca/gear": {
+      "*": "https://metreeca.github.io/gear/"
+    },
+    "@metreeca/http": {
+      "*": "https://metreeca.github.io/http/"
+    },
+    "@metreeca/flow": {
+      "*": "https://metreeca.github.io/flow/"
+    },
+    "@metreeca/tape": {
+      "*": "https://metreeca.github.io/tape/"
+    },
+    "typescript": {
+      "Request": "https://developer.mozilla.org/docs/Web/API/Request",
+      "URL": "https://developer.mozilla.org/docs/Web/API/URL"
+    }
+  }
+}
