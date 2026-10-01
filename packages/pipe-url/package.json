@@ -6,7 +6,7 @@
     "typescript",
     "pipeline",
     "etl",
-    "extraction",
+    "data-integration",
     "url"
   ],
   "homepage": "https://metreeca.github.io/pipe/",
