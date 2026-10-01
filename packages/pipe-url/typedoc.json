@@ -12,11 +12,9 @@
     "@metreeca/flow": {
       "*": "https://metreeca.github.io/flow/"
     },
-    "@metreeca/tape": {
-      "*": "https://metreeca.github.io/tape/"
-    },
     "typescript": {
       "Request": "https://developer.mozilla.org/docs/Web/API/Request",
+      "Response": "https://developer.mozilla.org/docs/Web/API/Response",
       "URL": "https://developer.mozilla.org/docs/Web/API/URL"
     }
   }
