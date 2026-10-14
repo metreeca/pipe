@@ -1,6 +1,6 @@
 {
   "private": true,
-  "version": "0.10.0",
+  "version": "0.10.1",
   "description": "Ready-made tasks for retrieving and persisting data from external sources.",
   "keywords": [
     "typescript",
