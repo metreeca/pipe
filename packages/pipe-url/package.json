@@ -1,6 +1,6 @@
 {
   "name": "@metreeca/pipe-url",
-  "version": "0.10.1",
+  "version": "0.11.0",
   "description": "URL processing tasks for @metreeca/pipe.",
   "keywords": [
     "typescript",
