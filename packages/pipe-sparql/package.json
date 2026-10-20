@@ -1,6 +1,6 @@
 {
   "name": "@metreeca/pipe-sparql",
-  "version": "0.11.0",
+  "version": "0.11.1",
   "description": "SPARQL processing tasks for @metreeca/pipe.",
   "keywords": [
     "typescript",
