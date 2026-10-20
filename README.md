@@ -2,10 +2,10 @@
 
 Ready-made tasks for retrieving and persisting data from external sources.
 
-**@metreeca/pipe** brings ready-made [@metreeca/flow](https://github.com/metreeca/flow) tasks for moving content between
-a pipeline and the systems it works with: drawing records out of web pages, object stores and databases, and writing
-results back to them. The tasks run under the [@metreeca/gear](https://github.com/metreeca/gear) job executor, which
-supplies the shared services they draw on.
+**@metreeca/pipe** provides ready-made [@metreeca/flow](https://github.com/metreeca/flow) tasks for moving content
+between a pipeline and the systems it works with: drawing records out of web pages, object stores and databases, and
+writing results back to them. The tasks run under the [@metreeca/gear](https://github.com/metreeca/gear) job executor,
+which supplies the shared services they draw on, including the clients and connection pools of the systems they reach.
 
 - **Ready-Made Tasks**: retrieval and persistence, chaining alongside any other task
 - **Shared Services**: clients, credentials and connection pools, built on demand and released after the run
