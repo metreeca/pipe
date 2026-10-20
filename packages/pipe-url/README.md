@@ -4,6 +4,9 @@
 
 URL processing tasks for [@metreeca/pipe](https://github.com/metreeca/pipe).
 
+Provides ready-made [@metreeca/flow](https://github.com/metreeca/flow) steps for working with resources identified by
+URLs in pipelines run by the [@metreeca/gear](https://github.com/metreeca/gear) job executor.
+
 # Installation
 
 ```shell

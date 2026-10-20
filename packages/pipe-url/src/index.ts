@@ -17,9 +17,11 @@
 /**
  * URL processing tasks.
  *
- * Retrieves the resources that URLs identify and crawls the graphs their links form, so a job can draw on remote and
- * local content as a feed. Exchanges run through the fetch client the enclosing execution supplies, so a job can swap
- * in a throttled, cached or stubbed client without altering its tasks.
+ * Provides ready-made {@link https://github.com/metreeca/flow @metreeca/flow} steps for working with resources
+ * identified by URLs in pipelines run by the {@link https://github.com/metreeca/gear @metreeca/gear} executor.
+ *
+ * Each step sends its requests through the fetch client bound in the enclosing execution, so a job can swap in a
+ * throttled, cached or stubbed client once and every step in the execution works through that client.
  *
  * @module index
  *

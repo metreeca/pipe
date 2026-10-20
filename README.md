@@ -33,11 +33,14 @@ Add a task package for each source family the pipeline reaches. Source packages 
 in only the drivers its own family needs. The job executor comes from [@metreeca/gear](https://github.com/metreeca/gear),
 which the task packages pull in transitively; install it directly to set up and run a job.
 
-| Package              | Description          |
-|----------------------|----------------------|
-| [@metreeca/pipe-url] | URL processing tasks |
+| Package                 | Description             |
+|-------------------------|-------------------------|
+| [@metreeca/pipe-url]    | URL processing tasks    |
+| [@metreeca/pipe-sparql] | SPARQL processing tasks |
 
 [@metreeca/pipe-url]: https://metreeca.github.io/pipe/modules/_metreeca_pipe-url.html
+
+[@metreeca/pipe-sparql]: https://metreeca.github.io/pipe/modules/_metreeca_pipe-sparql.html
 
 # Usage
 

@@ -1,0 +1,19 @@
+{
+  "externalSymbolLinkMappings": {
+    "@metreeca/core": {
+      "*": "https://metreeca.github.io/core/"
+    },
+    "@metreeca/gear": {
+      "*": "https://metreeca.github.io/gear/"
+    },
+    "@metreeca/flow": {
+      "*": "https://metreeca.github.io/flow/"
+    },
+    "@metreeca/trio": {
+      "*": "https://metreeca.github.io/trio/"
+    },
+    "@metreeca/wire-sparql": {
+      "*": "https://metreeca.github.io/wire/"
+    }
+  }
+}

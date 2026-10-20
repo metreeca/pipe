@@ -7,6 +7,10 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [0.11.0](https://github.com/metreeca/pipe/compare/v0.10.1...HEAD)
 
+### Added
+
+- `@metreeca/pipe-sparql` package with `select`, `construct`, `update` and `upload` steps for SPARQL endpoints
+
 ### Changed
 
 - Upgrade `@metreeca/core` to `^0.13.0`
