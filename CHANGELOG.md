@@ -10,6 +10,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Added
 
 - `@metreeca/pipe-sparql` package with `select`, `construct`, `update` and `upload` steps for SPARQL endpoints
+- `@metreeca/pipe-store` package with `lookup`, `retire` and `settle` steps for `@metreeca/keep` stores
 
 ### Changed
 

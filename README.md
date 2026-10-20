@@ -36,9 +36,12 @@ which the task packages pull in transitively; install it directly to set up and 
 | Package                 | Description             |
 |-------------------------|-------------------------|
 | [@metreeca/pipe-url]    | URL processing tasks    |
+| [@metreeca/pipe-store]  | Store processing tasks  |
 | [@metreeca/pipe-sparql] | SPARQL processing tasks |
 
 [@metreeca/pipe-url]: https://metreeca.github.io/pipe/modules/_metreeca_pipe-url.html
+
+[@metreeca/pipe-store]: https://metreeca.github.io/pipe/modules/_metreeca_pipe-store.html
 
 [@metreeca/pipe-sparql]: https://metreeca.github.io/pipe/modules/_metreeca_pipe-sparql.html
 

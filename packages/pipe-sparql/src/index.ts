@@ -20,8 +20,7 @@
  * Provides ready-made {@link https://github.com/metreeca/flow @metreeca/flow} steps for working with SPARQL
  * repositories in pipelines run by the {@link https://github.com/metreeca/gear @metreeca/gear} executor.
  *
- * Each step targets the repository bound to {@link createRepository} unless given one of its own, so a job binds its
- * repository once and every step in the execution works against that repository.
+ * A job binds a repository connector to {@link createRepository} once, and steps use that one unless given their own.
  *
  * @module index
  *

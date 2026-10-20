@@ -1,0 +1,22 @@
+{
+  "externalSymbolLinkMappings": {
+    "@metreeca/blue": {
+      "*": "https://metreeca.github.io/blue/"
+    },
+    "@metreeca/core": {
+      "*": "https://metreeca.github.io/core/"
+    },
+    "@metreeca/flow": {
+      "*": "https://metreeca.github.io/flow/"
+    },
+    "@metreeca/gear": {
+      "*": "https://metreeca.github.io/gear/"
+    },
+    "@metreeca/keep": {
+      "*": "https://metreeca.github.io/keep/"
+    },
+    "@metreeca/qest": {
+      "*": "https://metreeca.github.io/qest/"
+    }
+  }
+}

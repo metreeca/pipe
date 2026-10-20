@@ -1,0 +1,64 @@
+{
+  "name": "@metreeca/pipe-store",
+  "version": "0.11.0",
+  "description": "Store processing tasks for @metreeca/pipe.",
+  "keywords": [
+    "typescript",
+    "pipeline",
+    "etl",
+    "data-integration",
+    "linked-data",
+    "storage"
+  ],
+  "homepage": "https://metreeca.github.io/pipe/",
+  "bugs": {
+    "url": "https://github.com/metreeca/pipe/issues",
+    "email": "info@metreeca.com"
+  },
+  "license": "Apache-2.0",
+  "author": {
+    "name": "Metreeca",
+    "email": "info@metreeca.com",
+    "url": "https://www.metreeca.com/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/metreeca/pipe.git",
+    "directory": "packages/pipe-store"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "@metreeca/source": "./src/index.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "README.md",
+    "LICENSE",
+    "dist"
+  ],
+  "engines": {
+    "node": ">=22.22.0"
+  },
+  "scripts": {
+    "clean": "rm dist docs node_modules",
+    "build": "rm dist && tsc -p tsconfig.build.json",
+    "check": "npx vitest --typecheck run"
+  },
+  "dependencies": {
+    "@metreeca/blue": "^0.13.0",
+    "@metreeca/core": "^0.13.0",
+    "@metreeca/flow": "^0.12.0",
+    "@metreeca/gear": "^0.4.0",
+    "@metreeca/keep": "^0.12.0",
+    "@metreeca/qest": "^0.13.0",
+    "@metreeca/tape": "^0.12.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.3",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.13"
+  }
+}
